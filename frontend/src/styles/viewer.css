@@ -1,0 +1,89 @@
+/* Dual-Pane Synchronized Document Viewer Styles */
+
+.viewer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: calc(100vh - 72px);
+  overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+  .viewer-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+}
+
+/* Warm Parchment & Reading Modes */
+.legal-parchment-dark {
+  background: #0F172A; /* Calming navy-slate instead of harsh pitch black */
+  color: #E2E8F0;
+}
+
+.legal-parchment-paper {
+  background: #FDFDFB; /* Warm editorial book/legal parchment */
+  color: #1E293B;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.02);
+}
+
+.clause-card-dark {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  transition: all 0.2s ease-out;
+}
+
+.clause-card-dark:hover {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+.clause-card-paper {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease-out;
+}
+
+.clause-card-paper:hover {
+  border-color: #6366F1;
+  box-shadow: 0 4px 12px -2px rgba(99, 102, 241, 0.08);
+}
+
+/* Print Optimization for Attorney Consultation Brief */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+
+  nav,
+  header,
+  .no-print,
+  button,
+  [role="tablist"],
+  #main-content > div:first-child,
+  section[aria-label="Contract Source Text"] {
+    display: none !important;
+  }
+
+  #claim-analysis-panel {
+    width: 100% !important;
+    overflow: visible !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .consultation-brief,
+  article {
+    break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #CCCCCC !important;
+    page-break-inside: avoid;
+  }
+
+  a[href]:after {
+    content: none !important;
+  }
+}
+
