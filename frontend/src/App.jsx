@@ -60,6 +60,12 @@ export default function App() {
       } else if (e.altKey && e.key === '4') {
         e.preventDefault();
         handleTaskChange('consultation_brief');
+      } else if (e.altKey && e.key === '5') {
+        e.preventDefault();
+        handleTaskChange('qa_query');
+      } else if (e.altKey && e.key === '6') {
+        e.preventDefault();
+        handleTaskChange('comparison');
       } else if (e.key === 'Escape') {
         if (isUploadModalOpen) setIsUploadModalOpen(false);
         if (errorMessage) setErrorMessage(null);
@@ -96,11 +102,11 @@ export default function App() {
   };
 
   // Robust analysis runner with in-memory caching and deduplication
-  const runAnalysis = async (docId, taskType, forceRefresh = false, isBackground = false) => {
+  const runAnalysis = async (docId, taskType, forceRefresh = false, isBackground = false, customQuery = null) => {
     if (!docId) return null;
 
     // 1. Instant cache hit (0ms latency, zero API calls)
-    if (!forceRefresh && analysisCacheRef.current[taskType]) {
+    if (!forceRefresh && !customQuery && analysisCacheRef.current[taskType]) {
       console.log(`%c⚡ [AdjournAID Cache HIT] ${taskType} retrieved instantly from session cache (0ms latency)`, 'color: #10b981; font-weight: bold; background: #064e3b; padding: 2px 6px; border-radius: 4px;');
       if (activeTaskTypeRef.current === taskType) {
         setAnalysisData(analysisCacheRef.current[taskType]);
@@ -110,7 +116,7 @@ export default function App() {
     }
 
     // 2. Deduplicate: if already fetching in background or foreground, return existing promise
-    if (inFlightRef.current[taskType] && !forceRefresh) {
+    if (inFlightRef.current[taskType] && !forceRefresh && !customQuery) {
       if (!isBackground && activeTaskTypeRef.current === taskType) {
         setIsAnalyzing(true);
       }
@@ -122,7 +128,7 @@ export default function App() {
     }
     setErrorMessage(null);
 
-    const promise = api.analyzeDocument(docId, taskType, null, forceRefresh);
+    const promise = api.analyzeDocument(docId, taskType, customQuery, forceRefresh);
     inFlightRef.current[taskType] = promise;
 
     try {
@@ -164,9 +170,17 @@ export default function App() {
     }
   };
 
+  const handleAskQuestion = (customQuery) => {
+    setActiveTaskType('qa_query');
+    activeTaskTypeRef.current = 'qa_query';
+    if (sessionId) {
+      runAnalysis(sessionId, 'qa_query', true, false, customQuery);
+    }
+  };
+
   // Preloads remaining tabs SEQUENTIALLY in background to prevent container overloading & timeouts
   const preloadOtherTabsSequentially = async (docId) => {
-    const allModes = ['risk_review', 'simplification', 'redline', 'consultation_brief'];
+    const allModes = ['risk_review', 'simplification', 'redline', 'consultation_brief', 'comparison'];
     for (const mode of allModes) {
       // Abort if user switched document
       if (activeDocIdRef.current !== docId) return;
@@ -378,6 +392,7 @@ export default function App() {
           onTaskChange={handleTaskChange}
           isAnalyzing={isAnalyzing}
           onRefreshAnalysis={() => runAnalysis(sessionId, activeTaskType, true)}
+          onAskQuestion={handleAskQuestion}
         />
 
       ) : (

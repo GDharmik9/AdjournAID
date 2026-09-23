@@ -19,6 +19,7 @@ export default function DualPaneViewer({
   onTaskChange,
   isAnalyzing = false,
   onRefreshAnalysis,
+  onAskQuestion,
 }) {
 
   // Reading comfort theme: 'paper' (Warm Paper ☀️) or 'dark' (Soft Dark 🌙)
@@ -74,7 +75,6 @@ export default function DualPaneViewer({
           analysisCache={analysisCache}
           onTaskChange={onTaskChange}
           readingTheme={readingTheme}
-
           onThemeChange={setReadingTheme}
           fontSizeLevel={fontSizeLevel}
           onFontSizeChange={setFontSizeLevel}
@@ -102,6 +102,7 @@ export default function DualPaneViewer({
           rightPaneRef={rightPaneRef}
           onScroll={handleRightScroll}
           onVerifyInText={scrollToClause}
+          onAskQuestion={onAskQuestion}
           readingTheme={readingTheme}
           fontSizeLevel={fontSizeLevel}
         />

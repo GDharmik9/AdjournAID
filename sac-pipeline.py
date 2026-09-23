@@ -89,7 +89,8 @@ def main():
 
     for idx, r in enumerate(retrieved, 1):
         merged_badge = "[AUTO-MERGED PARENT SECTION]" if r.get("is_merged_parent") else "[CHILD CHUNK]"
-        print(f"    Match #{idx} {merged_badge}: {r['title']} (Score: {r['relevance_score']:.3f})")
+        score = r.get("relevance_score", 1.0)
+        print(f"    Match #{idx} {merged_badge}: {r['title']} (Score: {score:.3f})")
         print(f"    Snippet: {r['content'][:150]}...\n")
 
     # 4. LeMAJ Verification Layer

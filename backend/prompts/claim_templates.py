@@ -174,3 +174,80 @@ Output valid JSON:
   ]
 }}
 """
+
+
+def build_qa_prompt(doc_fingerprint: str, context_text: str, user_question: str = "") -> str:
+    """Builds CLAIM prompt for Interactive Document Q&A."""
+    q_str = user_question or "What are my primary obligations, liabilities, and default triggers under this agreement?"
+    return f"""### [C] CONTEXT:
+Document Fingerprint: {doc_fingerprint}
+Retrieved Contract Clauses:
+{context_text}
+
+### [L] LEGAL TASK:
+Answer the user's specific legal question accurately based SOLELY on the retrieved clauses:
+User Question: "{q_str}"
+
+### [A] AUDIENCE:
+A non-lawyer consumer, tenant, or business owner who needs plain-English explanations and specific clause references.
+
+### [I] INSTRUCTIONS:
+1. Provide a direct, plain-English answer in 2-3 concise paragraphs.
+2. Explicitly cite the specific clause title and section number that supports your answer.
+3. Identify practical consequences or operational tips for the user.
+4. If the retrieved text does NOT contain the answer, state clearly that the excerpt does not address this question.
+
+### [M] MODE OF OUTPUT:
+Output valid JSON:
+{{
+  "question": "{q_str}",
+  "direct_answer": "Plain-English direct response to the user's query.",
+  "primary_clause_ref": "Section 4.1",
+  "supporting_snippet": "Exact quote from the contract verifying this answer.",
+  "practical_advice": "Actionable next steps or questions for counsel.",
+  "confidence_rating": "HIGH",
+  "suggested_followups": [
+    "What notice is required before penalties apply?",
+    "Is there a cure period for inadvertent breach?"
+  ]
+}}
+"""
+
+
+def build_comparison_prompt(doc_fingerprint: str, context_text: str) -> str:
+    """Builds CLAIM prompt for Contract vs Standard Market Baseline Comparison."""
+    return f"""### [C] CONTEXT:
+Document Fingerprint: {doc_fingerprint}
+Source Contract Clauses:
+{context_text}
+
+### [L] LEGAL TASK:
+Compare the key provisions in this agreement against customary Fair-Market Commercial Standards.
+
+### [A] AUDIENCE:
+Consumer, tenant, or business owner evaluating whether terms are customary or one-sided.
+
+### [I] INSTRUCTIONS:
+1. Evaluate 4-6 major terms (Indemnification, Term/Renewal, Liability Caps, Termination, Governing Law).
+2. For each term, state what this contract requires vs. what Fair Market Standard provides.
+3. Assign a variance rating: "FAVORABLE", "STANDARD", "OFF-MARKET", or "HOSTILE".
+4. Provide a 1-sentence negotiation takeaway.
+
+### [M] MODE OF OUTPUT:
+Output valid JSON:
+{{
+  "comparison_title": "Fair-Market Baseline Comparative Analysis",
+  "market_alignment_score": 62,
+  "summary": "This contract contains several off-market provisions heavily favoring the drafting party.",
+  "comparison_items": [
+    {{
+      "term_category": "Indemnification",
+      "clause_ref": "Section 4.1",
+      "this_contract_term": "Tenant indemnifies Landlord even for Landlord's own negligence.",
+      "market_standard_term": "Mutual indemnification excluding gross negligence and willful misconduct.",
+      "variance_rating": "HOSTILE",
+      "negotiation_tip": "Demand customary mutual indemnity standard in commercial agreements."
+    }}
+  ]
+}}
+"""

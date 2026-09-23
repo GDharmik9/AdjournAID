@@ -21,10 +21,12 @@ class InferenceService:
         sections: List[Dict[str, Any]],
         doc_fingerprint: str,
         retrieved_contexts: Optional[List[Dict[str, Any]]] = None,
+        custom_query: Optional[str] = None,
     ) -> Dict[str, Any]:
         return InferenceEngine.generate(
             task_type=task_type,
             sections=sections,
             doc_fingerprint=doc_fingerprint,
             retrieved_contexts=retrieved_contexts,
+            custom_query=custom_query,
         )

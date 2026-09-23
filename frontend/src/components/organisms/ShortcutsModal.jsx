@@ -14,6 +14,8 @@ export default function ShortcutsModal({ isOpen, onClose, isPaper = false }) {
     { label: 'Plain English Tab', shortcut: 'Alt + 2' },
     { label: 'Contract Redlines Tab', shortcut: 'Alt + 3' },
     { label: 'Attorney Consultation Brief', shortcut: 'Alt + 4' },
+    { label: 'Interactive Legal Q&A', shortcut: 'Alt + 5' },
+    { label: 'Market Baseline Compare', shortcut: 'Alt + 6' },
     { label: 'Toggle Linked Scroll Sync', shortcut: 'Alt + S' },
     { label: 'Toggle Reading Theme (Warm / Dark)', shortcut: 'Alt + T' },
     { label: 'Find & Highlight Source Clause', shortcut: 'Enter / Space' },

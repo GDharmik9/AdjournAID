@@ -80,6 +80,7 @@ class SessionVectorRepository(IVectorRepository):
             if p_id and parent_counts.get(p_id, 0) >= 2:
                 if p_id not in emitted_parents and p_id in self.sections_by_id:
                     parent_sec = self.sections_by_id[p_id]
+                    score = round(float(ch.get("_score", 1.0)), 3)
                     final_contexts.append({
                         "section_id": parent_sec["section_id"],
                         "title": parent_sec["title"],
@@ -87,16 +88,19 @@ class SessionVectorRepository(IVectorRepository):
                         "page": parent_sec.get("page", 1),
                         "is_merged_parent": True,
                         "matched_siblings_count": parent_counts[p_id],
+                        "relevance_score": score,
                     })
                     emitted_parents.add(p_id)
             else:
                 if p_id not in emitted_parents:
+                    score = round(float(ch.get("_score", 1.0)), 3)
                     final_contexts.append({
                         "section_id": ch.get("parent_section_id", "chunk"),
                         "title": ch.get("parent_title", "Relevant Clause Excerpt"),
                         "content": ch.get("child_text", ""),
                         "page": ch.get("page_number", 1),
                         "is_merged_parent": False,
+                        "relevance_score": score,
                     })
 
             if len(final_contexts) >= top_k:

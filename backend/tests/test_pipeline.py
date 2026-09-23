@@ -242,6 +242,49 @@ def test_lemaj_boundary_conditions():
     assert verification["counts"]["correct"] == 0
 
 
+def test_file_type_restrictions_and_token_budgeting():
+    """Test MIME/extension upload security, context budgeting, and new CLAIM modes (Q&A & Comparison)."""
+    from backend.infra.llm.inference_engine import InferenceEngine
+    client = TestClient(app)
+
+    # 1. Test unsupported file upload rejection
+    fake_exe = b"MZ\x90\x00\x03\x00\x00\x00"
+    res_bad_file = client.post(
+        "/api/upload",
+        files={"file": ("malicious.exe", fake_exe, "application/octet-stream")},
+    )
+    assert res_bad_file.status_code == 400
+    assert "unsupported file format" in res_bad_file.json()["detail"].lower()
+
+    # 2. Test 4,000-char context window budget cap
+    huge_sections = [
+        {"section_id": f"sec-{i}", "title": f"Huge Section {i}", "content": "X" * 1500}
+        for i in range(5)
+    ]
+    formatted = InferenceEngine._format_contexts(None, huge_sections, max_chars=4000)
+    assert len(formatted) <= 4200  # including truncation tag
+    assert "[TRUNCATED FOR TOKEN BUDGET]" in formatted
+
+    # 3. Test Q&A and Comparison task modes via API
+    res_load = client.post("/api/sample-contracts/commercial-lease/load")
+    assert res_load.status_code == 200
+    session_id = res_load.json()["session_id"]
+
+    res_qa = client.post(
+        "/api/analyze",
+        json={"document_id": session_id, "task_type": "qa_query", "custom_query": "What is my termination notice?"}
+    )
+    assert res_qa.status_code == 200
+    assert "direct_answer" in res_qa.json()["analysis"]
+
+    res_comp = client.post(
+        "/api/analyze",
+        json={"document_id": session_id, "task_type": "comparison"}
+    )
+    assert res_comp.status_code == 200
+    assert "comparison_items" in res_comp.json()["analysis"]
+
+
 if __name__ == "__main__":
     print("Running AdjournAID Backend Test Suite...")
     test_pii_phi_scrubbing()
@@ -262,5 +305,7 @@ if __name__ == "__main__":
     print("PASS: test_security_headers_and_upload_limits")
     test_lemaj_boundary_conditions()
     print("PASS: test_lemaj_boundary_conditions")
-    print("ALL 9 TEST SUITES PASSED SUCCESSFULLY!")
+    test_file_type_restrictions_and_token_budgeting()
+    print("PASS: test_file_type_restrictions_and_token_budgeting")
+    print("ALL 10 TEST SUITES PASSED SUCCESSFULLY!")
 

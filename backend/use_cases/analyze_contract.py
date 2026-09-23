@@ -19,6 +19,8 @@ DEFAULT_QUERY_MAP = {
     "simplification": "payment obligations term covenants restrictions remedies",
     "redline": "limitation of liability indemnification termination for convenience",
     "consultation_brief": "unilateral obligations legal dispute risk warranty indemnification",
+    "comparison": "indemnification term renewal liability termination governing law",
+    "qa_query": "contract obligations rights liabilities remedies",
 }
 
 
@@ -80,6 +82,7 @@ class AnalyzeContractUseCase:
             sections=doc_meta.sections,
             doc_fingerprint=doc_meta.doc_fingerprint,
             retrieved_contexts=retrieved_contexts,
+            custom_query=custom_query,
         )
 
         # Verification Layer: LeMAJ Framework
@@ -90,6 +93,23 @@ class AnalyzeContractUseCase:
             items_to_verify = analysis_raw.get("simplified_clauses", [])
         elif task_type == "redline":
             items_to_verify = analysis_raw.get("redlines", [])
+        elif task_type == "comparison":
+            items_to_verify = [
+                {
+                    "clause_ref": c.get("clause_ref", c.get("term_category", "")),
+                    "summary": c.get("this_contract_term", ""),
+                    "implication": c.get("negotiation_tip", ""),
+                }
+                for c in analysis_raw.get("comparison_items", [])
+            ]
+        elif task_type == "qa_query":
+            items_to_verify = [
+                {
+                    "clause_ref": analysis_raw.get("primary_clause_ref", "Source Excerpt"),
+                    "summary": analysis_raw.get("direct_answer", ""),
+                    "implication": analysis_raw.get("practical_advice", ""),
+                }
+            ]
         else:
             items_to_verify = analysis_raw.get("top_red_flags", [])
 

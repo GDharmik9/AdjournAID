@@ -1,9 +1,10 @@
 # AdjournAID ⚖️🤖
 
+> **🏆 Chosen Challenge Vertical:** **AI for Legal Assistance & Access**  
 > **Democratized Legal Navigation & Contract Comprehension Platform**  
 > _An open-access, GenAI-powered educational co-pilot helping consumers, tenants, and small business owners understand, compare, and navigate complex contracts with expert-level precision—without unauthorized practice of law (UPL)._
 
-[![Tests: Passing](https://img.shields.io/badge/Tests-9%2F9%20Passing-emerald)](backend/tests/test_pipeline.py)
+[![Tests: Passing](https://img.shields.io/badge/Tests-10%2F10%20Passing-emerald)](backend/tests/test_pipeline.py)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Zero-Data-Retention](https://img.shields.io/badge/Privacy-Zero--Data--Retention-indigo)](docs/HIPAA_Compliance.md)
 [![WCAG 2.1 AA](https://img.shields.io/badge/Accessibility-WCAG%202.1%20AA-purple)](docs/EVALUATION_GUIDE.md#3--accessibility-inclusive-and-usable-design)
@@ -71,12 +72,12 @@ Legal documents—commercial leases, SaaS master agreements, vendor contracts, a
 
 ### 6. Actionable Deliverables (CLAIM Framework)
 
-- **Risk Review**: Clause-by-clause exposure analysis with counter-proposals.
-- **Plain English Simplification**: Demystifies legalese into actionable takeaways.
-- **Contract Redlines**: Proposed replacement text with negotiation rationales.
-- **Attorney Consultation Preparation Brief**: Synthesizes red flags, key counsel questions, and estimated billable legal fee savings ($875–$1,225+). Includes print-ready formatting (`@media print`).
-
----
+- **Mode 1: Contract Risk Review (`Alt + 1`)**: Clause-by-clause exposure analysis with counter-proposals and Red/Amber/Blue severity indicators.
+- **Mode 2: Plain English Simplification (`Alt + 2`)**: Demystifies legalese into actionable 8th-grade reading level takeaways.
+- **Mode 3: Contract Redlines (`Alt + 3`)**: Proposed balanced replacement text with negotiation rationales.
+- **Mode 4: Attorney Consultation Brief & Action Checklist (`Alt + 4`)**: Synthesizes red flags, counsel questions, estimated legal fee savings ($875–$1,225+), interactive pre-signing checklist, and print-ready export (`window.print()`).
+- **Mode 5: Interactive Legal Q&A & Citation Navigator (`Alt + 5`)**: Asks natural language questions grounded in contract excerpts with click-to-verify clause highlighting.
+- **Mode 6: Fair-Market Baseline Benchmark (`Alt + 6`)**: Side-by-side comparison of agreement terms against commercial market baselines (Favorable, Standard, Off-Market, Hostile).
 
 ## 🏗️ Technical Architecture Diagram
 
@@ -336,8 +337,19 @@ For competition judges and evaluators, consult [**`docs/EVALUATION_GUIDE.md`**](
 - **Security (High Impact)**: HIPAA Safe Harbor anonymization, indirect prompt injection defense, Zero-Data-Retention ephemeral storage, 30-min TTL purge, 10MB DoS payload limit, non-UPL disclaimers.
 - **Efficiency (High Impact)**: SAC eliminates DRM without token bloat, Hierarchical Auto-Merge collapses sibling chunks, Context Token Budgeting (4000 char cap), lightweight feature-hashing embedder.
 - **Accessibility (High Impact)**: Full WCAG 2.1 AA keyboard navigation (`Alt+1..4`, `Alt+S`, `Alt+T`, `?`), skip link, ARIA landmarks (`role="tablist"`, `aria-live="polite"`), Warm Paper & Soft Dark modes, 3-tier font scaler, `@media print` brief layout.
-- **Testing (High Impact)**: 9 comprehensive automated test suites covering happy paths, adversarial injections, TTL expiration, and boundary hallucinations.
-- **Code Quality (Medium Impact)**: Centralized frontend `api.js` client, Pydantic type models, request correlation tracking (`X-Request-ID`), modular pipelines.
+- **Testing (High Impact)**: 10 comprehensive automated test suites covering happy paths, file security, token context budgeting, adversarial injections, TTL expiration, and boundary hallucinations.
+- **Code Quality (Medium Impact)**: Centralized frontend `api.js` client with `X-Request-ID` correlation, Pydantic type models, zero monolithic methods (<60 lines), modular pipelines.
+
+---
+
+## 📋 Key Assumptions & Educational Non-UPL Scope
+
+In accordance with hackathon guidelines and legal engineering best practices, AdjournAID operates strictly under the following foundational assumptions:
+
+1. **Educational Co-Pilot Boundary (Non-UPL)**: The platform provides document literacy, structured issue spotting, and negotiation preparation. It does **not** engage in the Unauthorized Practice of Law (UPL), establish an attorney-client relationship, or generate binding legal representation.
+2. **Pre-Consultation Triage Purpose**: All deliverables (Risk Reviews, Simplifications, Redlines, Benchmarks, and Briefs) are designed to empower non-lawyers to hold focused, cost-effective consultations with licensed legal professionals.
+3. **Zero-Data-Retention (ZDR)**: Ephemeral in-memory vector indexing assumes that contract text contains sensitive personal or commercial information. Vector indices are strictly scoped to the active session and automatically swept after 30 minutes of inactivity.
+4. **Jurisdictional Baseline**: Baseline market comparisons reflect prevailing US commercial common law standards and general Uniform Commercial Code (UCC) principles unless state-specific governing law is explicitly cited.
 
 ---
 

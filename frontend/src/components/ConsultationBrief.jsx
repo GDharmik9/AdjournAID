@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Clock, DollarSign, AlertOctagon, HelpCircle, Check, Copy, Printer, Award } from 'lucide-react';
+import { Clock, DollarSign, AlertOctagon, HelpCircle, Check, Copy, Printer, Award, CheckSquare, Square } from 'lucide-react';
 import MetricStat from './atoms/MetricStat';
 import { getTypography } from '../constants/typography';
 
@@ -13,9 +13,36 @@ export default function ConsultationBrief({
   const [copied, setCopied] = useState(false);
   const typography = getTypography(fontSizeLevel);
 
+  // Default checklist items if none in brief
+  const defaultChecklist = [
+    { id: 'chk-1', task: 'Demand mutual indemnification carve-out for Landlord negligence', priority: 'CRITICAL', completed: false },
+    { id: 'chk-2', task: 'Shorten automatic renewal notice period from 180 to 60 days', priority: 'HIGH', completed: false },
+    { id: 'chk-3', task: 'Insist on 4% annual ceiling on controllable operating expenses', priority: 'MEDIUM', completed: false },
+    { id: 'chk-4', task: 'Relocate arbitration venue from Delaware to local county', priority: 'MEDIUM', completed: false },
+    { id: 'chk-5', task: 'Obtain certificate of insurance naming Tenant as additional insured', priority: 'HIGH', completed: false },
+  ];
+
+  const [checklist, setChecklist] = useState(brief?.action_checklist || defaultChecklist);
+
   if (!brief) return null;
 
+  const toggleCheck = (id) => {
+    setChecklist((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, completed: !item.completed } : item))
+    );
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const completedCount = checklist.filter((i) => i.completed).length;
+
   const handleCopy = () => {
+    const checklistText = checklist
+      .map((c) => `[${c.completed ? 'X' : ' '}] (${c.priority}) ${c.task}`)
+      .join('\n');
+
     const text = `
 # ATTORNEY CONSULTATION PREPARATION BRIEF
 ${brief.brief_title || 'Contract Review Brief'}
@@ -26,6 +53,9 @@ ${brief.client_summary || ''}
 ESTIMATED SAVINGS:
 - Hours Saved: ${brief.estimated_hours_saved || '2-3 hours'}
 - Cost Savings: ${brief.estimated_cost_savings || '$700+'}
+
+PRE-SIGNING ACTION CHECKLIST:
+${checklistText}
 
 TOP RED FLAGS:
 ${(brief.top_red_flags || []).map((r, i) => `${i + 1}. [${r.severity || 'CRITICAL'}] ${r.clause_ref}: ${r.issue}\n   Talking Point: ${r.counsel_talking_point}`).join('\n\n')}
@@ -68,28 +98,97 @@ ${(brief.client_leverage_points || []).map((l, i) => `• ${l}`).join('\n')}
       <div className={`p-5 rounded-xl border ${
         isPaper ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-800/50 border-slate-700/80'
       }`}>
-        <div className="flex items-center justify-between gap-3 mb-2">
+        <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
           <div className="flex items-center gap-2">
             <Award className="h-4 w-4 text-amber-500" />
             <h3 className={`${typography.title} ${isPaper ? 'text-slate-900' : 'text-slate-100'}`}>
               {brief.brief_title || 'Attorney Consultation Preparation Brief'}
             </h3>
           </div>
-          <button
-            onClick={handleCopy}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${typography.btn} font-semibold border transition-all ${
-              isPaper
-                ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
-                : 'bg-slate-700/60 hover:bg-slate-700 text-slate-200 border-slate-600'
-            }`}
-          >
-            {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5 opacity-70" />}
-            <span>{copied ? 'Copied to Clipboard' : 'Copy Brief'}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrint}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${typography.btn} font-semibold border transition-all ${
+                isPaper
+                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                  : 'bg-slate-700/60 hover:bg-slate-700 text-slate-200 border-slate-600'
+              }`}
+              title="Print Preparation Brief"
+            >
+              <Printer className="h-3.5 w-3.5 opacity-70" />
+              <span>Print Brief</span>
+            </button>
+            <button
+              onClick={handleCopy}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${typography.btn} font-semibold border transition-all ${
+                isPaper
+                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                  : 'bg-slate-700/60 hover:bg-slate-700 text-slate-200 border-slate-600'
+              }`}
+            >
+              {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5 opacity-70" />}
+              <span>{copied ? 'Copied' : 'Copy Brief'}</span>
+            </button>
+          </div>
         </div>
         <p className={`${typography.body} ${isPaper ? 'text-slate-600' : 'text-slate-300'}`}>
           {brief.client_summary}
         </p>
+      </div>
+
+      {/* Interactive Action Punch List */}
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className={`flex items-center gap-1.5 ${typography.sectionTitle} uppercase tracking-wider ${
+            isPaper ? 'text-blue-800' : 'text-blue-400'
+          }`}>
+            <CheckSquare className="h-4 w-4" />
+            <span>Pre-Signing Action Checklist</span>
+          </div>
+          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+            isPaper ? 'bg-blue-100 text-blue-800' : 'bg-blue-900/40 text-blue-300'
+          }`}>
+            {completedCount}/{checklist.length} Completed
+          </span>
+        </div>
+
+        <div className={`p-4 rounded-xl border space-y-2 ${
+          isPaper ? 'bg-white border-blue-200 shadow-sm' : 'bg-slate-800/40 border-slate-700/70'
+        }`}>
+          {checklist.map((item) => (
+            <div
+              key={item.id}
+              onClick={() => toggleCheck(item.id)}
+              className={`flex items-start gap-2.5 p-2 rounded-lg cursor-pointer transition-colors ${
+                item.completed
+                  ? isPaper ? 'bg-slate-50 text-slate-400 line-through' : 'bg-slate-800/60 text-slate-500 line-through'
+                  : isPaper ? 'hover:bg-slate-50 text-slate-800' : 'hover:bg-slate-800/40 text-slate-200'
+              }`}
+            >
+              <button
+                type="button"
+                className="mt-0.5 text-blue-500 flex-shrink-0"
+                aria-label={item.completed ? "Mark incomplete" : "Mark complete"}
+              >
+                {item.completed ? <CheckSquare className="h-4 w-4 text-emerald-500" /> : <Square className="h-4 w-4 text-slate-400" />}
+              </button>
+              <div className="flex-1 flex items-center justify-between gap-2">
+                <span className={`${typography.body} ${item.completed ? 'line-through opacity-60' : ''}`}>
+                  {item.task}
+                </span>
+                <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase border flex-shrink-0 ${
+                  item.priority === 'CRITICAL'
+                    ? isPaper ? 'bg-rose-100 text-rose-800 border-rose-200' : 'bg-rose-950/50 text-rose-300 border-rose-800'
+                    : item.priority === 'HIGH'
+                    ? isPaper ? 'bg-amber-100 text-amber-800 border-amber-200' : 'bg-amber-950/50 text-amber-300 border-amber-800'
+                    : isPaper ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-slate-800 text-slate-400 border-slate-700'
+                }`}>
+                  {item.priority}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Top Red Flags Section */}

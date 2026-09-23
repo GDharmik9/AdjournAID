@@ -4,11 +4,13 @@ import RiskReviewList from './RiskReviewList';
 import PlainEnglishList from './PlainEnglishList';
 import RedlinesList from './RedlinesList';
 import ConsultationBrief from '../ConsultationBrief';
+import QuestionAnsweringPane from './QuestionAnsweringPane';
+import PolicyComparisonList from './PolicyComparisonList';
 import { getTypography } from '../../constants/typography';
 
 /**
  * Organism: ClaimAnalysisPane
- * Right pane of DualPaneViewer: exposure score header, loading state, and dynamic router for all 4 CLAIM analysis modes.
+ * Right pane of DualPaneViewer: exposure score header, loading state, and dynamic router for all 6 CLAIM analysis modes.
  */
 export default function ClaimAnalysisPane({
   analysisData,
@@ -17,6 +19,7 @@ export default function ClaimAnalysisPane({
   rightPaneRef,
   onScroll,
   onVerifyInText,
+  onAskQuestion,
   readingTheme = 'dark',
   fontSizeLevel = 'md',
 }) {
@@ -127,6 +130,28 @@ export default function ClaimAnalysisPane({
                 brief={analysis}
                 onVerifyClause={onVerifyInText}
                 themeMode={readingTheme}
+                fontSizeLevel={fontSizeLevel}
+              />
+            )}
+
+            {/* Mode 5: Interactive Contract Q&A */}
+            {activeTaskType === 'qa_query' && (
+              <QuestionAnsweringPane
+                analysisData={analysisData}
+                onAskQuestion={onAskQuestion}
+                onVerifyInText={onVerifyInText}
+                isAnalyzing={isAnalyzing}
+                readingTheme={readingTheme}
+                fontSizeLevel={fontSizeLevel}
+              />
+            )}
+
+            {/* Mode 6: Contract & Policy Baseline Comparison */}
+            {activeTaskType === 'comparison' && (
+              <PolicyComparisonList
+                comparisonData={analysis}
+                onVerifyInText={onVerifyInText}
+                readingTheme={readingTheme}
                 fontSizeLevel={fontSizeLevel}
               />
             )}

@@ -47,6 +47,15 @@ export default function MainLayout({
         </div>
       )}
 
+      {/* Screen Reader Status Announcer (WCAG 2.1 AA) */}
+      <div
+        id="a11y-status-announcer"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      />
+
       {/* Main Content Area */}
       <main id="main-content" className="flex-1 overflow-hidden" tabIndex="-1">
         {children}

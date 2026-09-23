@@ -12,6 +12,21 @@ const apiClient = axios.create({
   },
 });
 
+// Request interceptor injecting enterprise correlation ID
+apiClient.interceptors.request.use(
+  (config) => {
+    if (!config.headers['X-Request-ID']) {
+      const correlationId =
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `req-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      config.headers['X-Request-ID'] = correlationId;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // Response interceptor for consistent error extraction
 apiClient.interceptors.response.use(
   (response) => response,

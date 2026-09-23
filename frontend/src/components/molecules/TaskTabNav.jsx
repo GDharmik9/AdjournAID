@@ -1,9 +1,9 @@
 import React from 'react';
-import { ShieldAlert, BookOpen, GitCompare, FileCheck2 } from 'lucide-react';
+import { ShieldAlert, BookOpen, GitCompare, FileCheck2, MessageCircleQuestion, Scale } from 'lucide-react';
 
 /**
  * Molecule: TaskTabNav
- * Accessible tab navigation for the 4 CLAIM analysis modes.
+ * Accessible tab navigation for the 6 CLAIM analysis modes.
  */
 export default function TaskTabNav({
   activeTaskType,
@@ -30,7 +30,7 @@ export default function TaskTabNav({
     {
       id: 'tab-redline',
       type: 'redline',
-      label: 'Contract Redlines',
+      label: 'Redlines',
       icon: GitCompare,
       title: 'Side-by-Side Redlines (Alt + 3)',
     },
@@ -40,6 +40,20 @@ export default function TaskTabNav({
       label: 'Attorney Brief',
       icon: FileCheck2,
       title: 'Attorney Consultation Brief (Alt + 4)',
+    },
+    {
+      id: 'tab-qa-query',
+      type: 'qa_query',
+      label: 'Ask Q&A',
+      icon: MessageCircleQuestion,
+      title: 'Interactive Legal Q&A (Alt + 5)',
+    },
+    {
+      id: 'tab-comparison',
+      type: 'comparison',
+      label: 'Market Compare',
+      icon: Scale,
+      title: 'Fair-Market Baseline Benchmark (Alt + 6)',
     },
   ];
 

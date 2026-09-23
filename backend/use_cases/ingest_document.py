@@ -48,6 +48,11 @@ class IngestDocumentUseCase:
 
         clean_title = doc_title or filename.rsplit(".", 1)[0].replace("_", " ").title()
         lower_name = filename.lower()
+        ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".md"}
+        if not any(lower_name.endswith(ext) for ext in ALLOWED_EXTENSIONS):
+            raise DocumentParsingError(
+                f"Unsupported file format '{filename}'. Allowed formats are: PDF (.pdf), Word (.docx), Plain Text (.txt, .md)."
+            )
 
         try:
             if lower_name.endswith(".pdf"):
@@ -57,6 +62,8 @@ class IngestDocumentUseCase:
             else:
                 text_str = file_bytes.decode("utf-8", errors="ignore")
                 pages = DocumentParser.parse_text(text_str, scrub_pii=settings.ENABLE_PII_SCRUBBING)
+        except DocumentParsingError:
+            raise
         except Exception as e:
             logger.error(f"Failed parsing file {filename}: {e}")
             raise DocumentParsingError(f"Failed to parse document: {str(e)}")
