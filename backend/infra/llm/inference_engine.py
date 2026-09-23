@@ -116,6 +116,7 @@ class InferenceEngine:
             system_instruction=CLAIM_SYSTEM_PROMPT,
             temperature=0.1,
             response_mime_type="application/json",
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
         )
 
         response = client.models.generate_content(

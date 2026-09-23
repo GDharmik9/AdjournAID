@@ -10,6 +10,7 @@ class AnalyzeRequest(BaseModel):
     document_id: str = Field(..., description="Active session ID of uploaded/loaded contract")
     task_type: str = Field("risk_review", description="Analysis mode: risk_review, simplification, redline, or consultation_brief")
     custom_query: Optional[str] = Field(None, description="Optional custom search query")
+    force_refresh: bool = Field(False, description="Bypass cache and force re-analysis with LLM")
 
 
 class ProviderUpdateRequest(BaseModel):

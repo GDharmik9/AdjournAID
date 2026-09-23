@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import api from './services/api';
 import Navbar from './components/Navbar';
 import DualPaneViewer from './components/DualPaneViewer';
@@ -11,6 +11,12 @@ export default function App() {
   const [documentData, setDocumentData] = useState(null);
   const [analysisData, setAnalysisData] = useState(null);
   const [activeTaskType, setActiveTaskType] = useState('risk_review');
+  const [analysisCache, setAnalysisCache] = useState({});
+
+  // Synchronous refs to prevent closure staleness and race conditions across tab clicks
+  const analysisCacheRef = useRef({});
+  const activeTaskTypeRef = useRef('risk_review');
+  const inFlightRef = useRef({});
 
   const [isLoading, setIsLoading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -18,6 +24,12 @@ export default function App() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [activeProvider, setActiveProvider] = useState('fallback');
+
+  const resetAllCaches = () => {
+    analysisCacheRef.current = {};
+    inFlightRef.current = {};
+    setAnalysisCache({});
+  };
 
   // Fetch active provider and auto-load sample Commercial Lease contract on initial startup
   useEffect(() => {
@@ -68,8 +80,9 @@ export default function App() {
     try {
       await api.setProvider(newProvider);
       setActiveProvider(newProvider);
+      resetAllCaches();
       if (sessionId) {
-        runAnalysis(sessionId, activeTaskType);
+        runAnalysis(sessionId, activeTaskTypeRef.current, true);
       }
     } catch (e) {
       console.error('Failed to change provider:', e);
@@ -77,63 +90,123 @@ export default function App() {
     }
   };
 
-  // Fetch or trigger analysis when document or task changes
-  const runAnalysis = async (docId, taskType) => {
+  // Robust analysis runner with in-memory caching and deduplication
+  const runAnalysis = async (docId, taskType, forceRefresh = false) => {
     if (!docId) return;
-    setIsAnalyzing(true);
+
+    // 1. Instant cache hit
+    if (!forceRefresh && analysisCacheRef.current[taskType]) {
+      if (activeTaskTypeRef.current === taskType) {
+        setAnalysisData(analysisCacheRef.current[taskType]);
+        setIsAnalyzing(false);
+      }
+      return;
+    }
+
+    // 2. Deduplicate: if already fetching in background, don't fire duplicate request
+    if (inFlightRef.current[taskType] && !forceRefresh) {
+      if (activeTaskTypeRef.current === taskType) {
+        setIsAnalyzing(true);
+      }
+      return;
+    }
+
+    if (activeTaskTypeRef.current === taskType) {
+      setIsAnalyzing(true);
+    }
     setErrorMessage(null);
+
+    const promise = api.analyzeDocument(docId, taskType, null, forceRefresh);
+    inFlightRef.current[taskType] = promise;
+
     try {
-      const data = await api.analyzeDocument(docId, taskType);
-      setAnalysisData(data);
+      const data = await promise;
+      // Store in synchronous ref cache
+      analysisCacheRef.current[taskType] = data;
+      setAnalysisCache({ ...analysisCacheRef.current });
+
+      // Only update UI if user is STILL viewing this task type (prevents race overwrites)
+      if (activeTaskTypeRef.current === taskType) {
+        setAnalysisData(data);
+      }
     } catch (err) {
-      console.error('Analysis error:', err);
-      setErrorMessage(err.message || 'Failed to complete CLAIM analysis.');
+      console.error(`Analysis error for ${taskType}:`, err);
+      if (activeTaskTypeRef.current === taskType) {
+        setErrorMessage(err.message || 'Failed to complete CLAIM analysis.');
+      }
     } finally {
-      setIsAnalyzing(false);
+      delete inFlightRef.current[taskType];
+      if (activeTaskTypeRef.current === taskType) {
+        setIsAnalyzing(false);
+      }
     }
   };
 
   const handleTaskChange = (newTaskType) => {
     setActiveTaskType(newTaskType);
-    if (sessionId) {
-      runAnalysis(sessionId, newTaskType);
+    activeTaskTypeRef.current = newTaskType;
+    if (!sessionId) return;
+
+    // 1. Instant switch if already cached (0ms latency, zero API calls)
+    const cached = analysisCacheRef.current[newTaskType];
+    if (cached) {
+      setAnalysisData(cached);
+      setIsAnalyzing(false);
+      return;
     }
+
+    // 2. If already fetching in flight, show loader and await
+    if (inFlightRef.current[newTaskType]) {
+      setAnalysisData(null);
+      setIsAnalyzing(true);
+      return;
+    }
+
+    // 3. Otherwise, fetch this tab's analysis
+    setAnalysisData(null);
+    runAnalysis(sessionId, newTaskType);
   };
 
   const handleLoadSample = async (sampleId) => {
     setIsLoading(true);
     setErrorMessage(null);
+    setAnalysisData(null);
+    resetAllCaches();
     try {
       const data = await api.loadSampleContract(sampleId);
       setSessionId(data.session_id);
       setDocumentData(data);
+      setIsLoading(false); // Contract renders immediately
 
-      // Trigger default risk review analysis
-      await runAnalysis(data.session_id, activeTaskType);
+      // Trigger default risk review analysis non-blocking
+      runAnalysis(data.session_id, activeTaskTypeRef.current);
     } catch (err) {
       console.error('Load sample error:', err);
       setErrorMessage(err.message || 'Failed to load sample contract.');
-    } finally {
       setIsLoading(false);
     }
   };
+
+
 
   const handleUploadFile = async (file, docTitle) => {
     setIsLoading(true);
     setIsUploadModalOpen(false);
     setErrorMessage(null);
+    setAnalysisData(null);
+    resetAllCaches();
 
     try {
       const data = await api.uploadFile(file, docTitle);
       setSessionId(data.document_id);
       setDocumentData(data);
+      setIsLoading(false); // Contract renders immediately
 
-      // Run analysis
-      await runAnalysis(data.document_id, activeTaskType);
+      // Run analysis non-blocking
+      runAnalysis(data.document_id, activeTaskTypeRef.current);
     } catch (err) {
       console.error('Upload error:', err);
       setErrorMessage(err.message || 'Failed to process contract.');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -142,18 +215,20 @@ export default function App() {
     setIsLoading(true);
     setIsUploadModalOpen(false);
     setErrorMessage(null);
+    setAnalysisData(null);
+    resetAllCaches();
 
     try {
       const data = await api.uploadRawText(text, docTitle);
       setSessionId(data.document_id);
       setDocumentData(data);
+      setIsLoading(false); // Contract renders immediately
 
-      // Run analysis
-      await runAnalysis(data.document_id, activeTaskType);
+      // Run analysis non-blocking
+      runAnalysis(data.document_id, activeTaskTypeRef.current);
     } catch (err) {
       console.error('Upload text error:', err);
       setErrorMessage(err.message || 'Failed to process contract.');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -166,6 +241,7 @@ export default function App() {
       setSessionId(null);
       setDocumentData(null);
       setAnalysisData(null);
+      resetAllCaches();
     } catch (err) {
       console.error('Purge error:', err);
       setErrorMessage(err.message || 'Failed to purge session.');
@@ -173,6 +249,9 @@ export default function App() {
       setIsPurging(false);
     }
   };
+
+
+
 
 
   return (
@@ -220,7 +299,7 @@ export default function App() {
           activeTaskType={activeTaskType}
           onTaskChange={handleTaskChange}
           isAnalyzing={isAnalyzing}
-          onRefreshAnalysis={() => runAnalysis(sessionId, activeTaskType)}
+          onRefreshAnalysis={() => runAnalysis(sessionId, activeTaskType, true)}
         />
       ) : (
         <div className="flex flex-col items-center justify-center h-[calc(100vh-140px)] space-y-4">

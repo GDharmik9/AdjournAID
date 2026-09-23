@@ -25,11 +25,14 @@ class PurgeSessionUseCase:
         self.vector_mgr = vector_mgr
 
     def purge_session(self, session_id: str) -> Dict[str, str]:
+        from backend.use_cases.analyze_contract import analyze_contract_use_case
         purged_retriever = self.vector_mgr.purge_session(session_id)
         purged_doc = self.doc_repo.delete(session_id)
+        analyze_contract_use_case.purge_session_cache(session_id)
 
         if not purged_retriever and not purged_doc:
             raise SessionNotFoundError(f"Session '{session_id}' does not exist")
+
 
         return {
             "session_id": session_id,

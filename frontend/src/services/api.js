@@ -6,7 +6,7 @@ import axios from 'axios';
 
 const apiClient = axios.create({
   baseURL: '/api',
-  timeout: 45000, // 45 seconds for LLM inference
+  timeout: 90000, // 90 seconds safe ceiling for heavy contracts and cold-starts
   headers: {
     'Content-Type': 'application/json',
   },
@@ -82,14 +82,16 @@ export const api = {
   },
 
   /** Execute CLAIM legal analysis */
-  analyzeDocument: async (documentId, taskType, customQuery = null) => {
+  analyzeDocument: async (documentId, taskType, customQuery = null, forceRefresh = false) => {
     const res = await apiClient.post('/analyze', {
       document_id: documentId,
       task_type: taskType,
       custom_query: customQuery,
+      force_refresh: forceRefresh,
     });
     return res.data;
   },
+
 
   /** Purge ephemeral session data (ZDR) */
   purgeSession: async (sessionId) => {
