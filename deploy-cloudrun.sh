@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# AdjournAID: Google Cloud Run Deployment Script (Concept B)
-# Deploys backend and frontend to Google Cloud Run to provide live https://*.a.run.app URLs.
+# AdjournAID: Google Cloud Run & Vertex AI Deployment Script (Bash)
+# Deploys the unified full-stack application (React UI + FastAPI + Vertex AI)
 # ==============================================================================
 
 set -e
 
-PROJECT_ID="${1:-$(gcloud config get-value project)}"
+PROJECT_ID="${1:-$(gcloud config get-value project 2>/dev/null)}"
 REGION="${2:-us-central1}"
 
 if [ -z "$PROJECT_ID" ]; then
@@ -15,12 +15,14 @@ if [ -z "$PROJECT_ID" ]; then
   exit 1
 fi
 
-echo "🚀 Deploying AdjournAID to Google Cloud Run..."
-echo "• Project: $PROJECT_ID"
-echo "• Region:  $REGION"
+echo "=============================================================================="
+echo " 🚀 Deploying AdjournAID to Google Cloud Run with Vertex AI"
+echo "=============================================================================="
+echo "• GCP Project: $PROJECT_ID"
+echo "• Region:      $REGION"
 
-# Enable required Google Cloud APIs
-echo "\n[Step 1] Enabling Google Cloud Services..."
+# Step 1: Enable required GCP APIs
+echo -e "\n[Step 1/3] Enabling Google Cloud Services..."
 gcloud services enable \
   run.googleapis.com \
   artifactregistry.googleapis.com \
@@ -28,37 +30,50 @@ gcloud services enable \
   cloudbuild.googleapis.com \
   --project="$PROJECT_ID"
 
-# Deploy Backend Service
-echo "\n[Step 2] Building and Deploying Backend Service to Cloud Run..."
-cd backend
-gcloud run deploy adjourn-backend \
+# Step 2: Grant Vertex AI IAM permissions to Cloud Run Service Account
+echo -e "\n[Step 2/3] Configuring Vertex AI IAM permissions..."
+PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format 'value(projectNumber)')
+DEFAULT_COMPUTE_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+
+echo "• Granting required Cloud Run & Vertex AI IAM roles to ${DEFAULT_COMPUTE_SA}..."
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:${DEFAULT_COMPUTE_SA}" \
+  --role="roles/aiplatform.user" \
+  --condition=None \
+  --quiet
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:${DEFAULT_COMPUTE_SA}" \
+  --role="roles/storage.admin" \
+  --condition=None \
+  --quiet
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:${DEFAULT_COMPUTE_SA}" \
+  --role="roles/artifactregistry.writer" \
+  --condition=None \
+  --quiet
+
+# Step 3: Build & Deploy Unified Full-Stack Container to Cloud Run
+echo -e "\n[Step 3/3] Building and Deploying Unified Service to Cloud Run..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+gcloud run deploy adjournaid \
   --source . \
   --platform managed \
   --region "$REGION" \
   --allow-unauthenticated \
-  --set-env-vars "LLM_PROVIDER=gemini,GEMINI_MODEL=gemini-2.0-flash,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=$REGION" \
+  --set-env-vars "LLM_PROVIDER=vertex_ai,GEMINI_MODEL=gemini-2.5-flash,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=$REGION" \
+  --memory 1Gi \
+  --cpu 1 \
+  --timeout 300 \
   --project "$PROJECT_ID"
 
-BACKEND_URL=$(gcloud run services describe adjourn-backend --platform managed --region "$REGION" --project "$PROJECT_ID" --format 'value(status.url)')
-echo "✅ Backend deployed at: $BACKEND_URL"
+SERVICE_URL=$(gcloud run services describe adjournaid --platform managed --region "$REGION" --project "$PROJECT_ID" --format 'value(status.url)')
 
-# Deploy Frontend Service
-echo "\n[Step 3] Building and Deploying Frontend Service to Cloud Run..."
-cd ../frontend
-gcloud run deploy adjourn-frontend \
-  --source . \
-  --platform managed \
-  --region "$REGION" \
-  --allow-unauthenticated \
-  --set-env-vars "VITE_API_URL=$BACKEND_URL" \
-  --project "$PROJECT_ID"
-
-FRONTEND_URL=$(gcloud run services describe adjourn-frontend --platform managed --region "$REGION" --project "$PROJECT_ID" --format 'value(status.url)')
-
-echo "\n=============================================================================="
-echo " 🎉 AdjournAID CLOUD RUN DEPLOYMENT COMPLETE!"
+echo -e "\n=============================================================================="
+echo " 🎉 AdjournAID CLOUD RUN & VERTEX AI DEPLOYMENT COMPLETE!"
 echo "=============================================================================="
-echo "• Live Web Application URL: $FRONTEND_URL"
-echo "• Backend API URL:          $BACKEND_URL"
-echo "• Swagger Documentation:    $BACKEND_URL/docs"
+echo "• Live Web Application URL: $SERVICE_URL"
+echo "• Health & Model Status:    $SERVICE_URL/api/health"
+echo "• Swagger Documentation:    $SERVICE_URL/docs"
 echo "=============================================================================="
