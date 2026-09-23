@@ -9,6 +9,12 @@
 [![Zero-Data-Retention](https://img.shields.io/badge/Privacy-Zero--Data--Retention-indigo)](docs/HIPAA_Compliance.md)
 [![WCAG 2.1 AA](https://img.shields.io/badge/Accessibility-WCAG%202.1%20AA-purple)](docs/EVALUATION_GUIDE.md#3--accessibility-inclusive-and-usable-design)
 [![Cloud Run Ready](https://img.shields.io/badge/Deploy-Google%20Cloud%20Run-blue)](deploy-cloudrun.sh)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-adjournaid.dharmik.me-success)](https://adjournaid.dharmik.me/)
+
+> 🌐 **Live Production App (Custom Domain):** [https://adjournaid.dharmik.me/](https://adjournaid.dharmik.me/)  
+> ☁️ **Google Cloud Run Direct URL:** [https://adjournaid-981533950453.us-central1.run.app/](https://adjournaid-981533950453.us-central1.run.app/)  
+> 📖 **Interactive OpenAPI / Swagger Docs:** [https://adjournaid.dharmik.me/docs](https://adjournaid.dharmik.me/docs)  
+> 🩺 **Real-Time Health & Telemetry API:** [https://adjournaid.dharmik.me/api/health](https://adjournaid.dharmik.me/api/health)
 
 ---
 

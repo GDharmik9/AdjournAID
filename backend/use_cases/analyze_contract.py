@@ -4,6 +4,7 @@ CLAIM Prompt Inference Engine, and LeMAJ Fact-Checking Verification.
 """
 
 import logging
+from collections import OrderedDict
 from typing import Dict, Any, Optional
 
 from backend.core.exceptions import SessionNotFoundError
@@ -25,7 +26,9 @@ DEFAULT_QUERY_MAP = {
 
 
 class AnalyzeContractUseCase:
-    """Coordinates retrieval, generation, and verification for legal contract analysis."""
+    """Coordinates retrieval, generation, and verification for legal contract analysis with LRU caching."""
+
+    MAX_CACHE_ENTRIES = 256
 
     def __init__(
         self,
@@ -34,13 +37,27 @@ class AnalyzeContractUseCase:
     ):
         self.doc_repo = doc_repo
         self.vector_mgr = vector_mgr
-        self._analysis_cache: Dict[str, Dict[str, Any]] = {}
+        self._analysis_cache: OrderedDict[str, Dict[str, Any]] = OrderedDict()
+        self.cache_hits: int = 0
+        self.cache_misses: int = 0
 
     def purge_session_cache(self, session_id: str) -> None:
         """Purges cached analysis entries belonging to a given session."""
-        keys_to_remove = [k for k in self._analysis_cache if k.startswith(f"{session_id}:")]
+        keys_to_remove = [k for k in list(self._analysis_cache.keys()) if k.startswith(f"{session_id}:")]
         for k in keys_to_remove:
             self._analysis_cache.pop(k, None)
+
+    def get_cache_stats(self) -> Dict[str, Any]:
+        """Returns LRU cache efficiency metrics."""
+        total = self.cache_hits + self.cache_misses
+        hit_ratio = round((self.cache_hits / total * 100), 2) if total > 0 else 0.0
+        return {
+            "entries": len(self._analysis_cache),
+            "max_entries": self.MAX_CACHE_ENTRIES,
+            "hits": self.cache_hits,
+            "misses": self.cache_misses,
+            "hit_ratio_pct": hit_ratio,
+        }
 
     def execute(
         self,
@@ -52,12 +69,17 @@ class AnalyzeContractUseCase:
         provider = InferenceService.get_active_provider()
         cache_key = f"{document_id}:{task_type}:{provider}:{custom_query or ''}"
 
-        # Return cached result if available and not forced to refresh
+        # Return cached result if available and not forced to refresh (LRU hit)
         if not force_refresh and cache_key in self._analysis_cache:
-            logger.info(f"Serving cached analysis for session '{document_id}', task '{task_type}', provider '{provider}'")
+            self.cache_hits += 1
+            self._analysis_cache.move_to_end(cache_key)
+            logger.info(f"Serving cached analysis for session '{document_id}', task '{task_type}' (Cache Hit #{self.cache_hits})")
             cached_result = dict(self._analysis_cache[cache_key])
             cached_result["cached"] = True
+            cached_result["cache_hit"] = True
             return cached_result
+
+        self.cache_misses += 1
 
         doc_meta = self.doc_repo.get(document_id)
         if not doc_meta:
@@ -129,7 +151,9 @@ class AnalyzeContractUseCase:
             "cached": False,
         }
 
-        # Store in volatile in-memory session cache
+        # Store in volatile in-memory session cache with LRU bounded capacity
+        if len(self._analysis_cache) >= self.MAX_CACHE_ENTRIES:
+            self._analysis_cache.popitem(last=False)
         self._analysis_cache[cache_key] = result
         return result
 
