@@ -164,6 +164,7 @@ class InferenceEngine:
             system_instruction=CLAIM_SYSTEM_PROMPT,
             temperature=0.1,
             response_mime_type="application/json",
+            max_output_tokens=1500,
             thinking_config=types.ThinkingConfig(thinking_budget=0),
             automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
         )

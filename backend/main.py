@@ -56,6 +56,11 @@ async def add_security_and_audit_headers(request: Request, call_next):
     )
     response.headers["X-Zero-Data-Retention"] = "enforced"
     response.headers["X-Content-Type-Options"] = "nosniff"
+
+    # Fast client-side caching for content-hashed static assets
+    if request.url.path.startswith("/assets/"):
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+
     return response
 
 
