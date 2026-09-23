@@ -1,5 +1,5 @@
 """
-AdjournAI FastAPI Server Entrypoint (📄 Pages: Application Root)
+AdjournAID FastAPI Server Entrypoint (📄 Pages: Application Root)
 Clean, lightweight ASGI orchestration server mounting API routes,
 security headers, CORS, and Zero-Data-Retention (ZDR) lifecycle hooks.
 """
@@ -16,7 +16,7 @@ from backend.delivery.http.routes.api_router import api_router
 from backend.use_cases.purge_session import purge_session_use_case
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("AdjournAI")
+logger = logging.getLogger("AdjournAID")
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -46,7 +46,7 @@ async def add_security_and_audit_headers(request: Request, call_next):
     response: Response = await call_next(request)
     response.headers["X-Request-ID"] = correlation_id
     response.headers["X-Legal-Disclaimer"] = (
-        "AdjournAI is an educational co-pilot and does not provide legal advice (Non-UPL)."
+        "AdjournAID is an educational co-pilot and does not provide legal advice (Non-UPL)."
     )
     response.headers["X-Zero-Data-Retention"] = "enforced"
     response.headers["X-Content-Type-Options"] = "nosniff"

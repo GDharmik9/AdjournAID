@@ -1,5 +1,5 @@
 """
-AdjournAI Standalone SAC Demonstration & Verification Pipeline.
+AdjournAID Standalone SAC Demonstration & Verification Pipeline.
 Usage:
     python sac-pipeline.py
 """
@@ -47,7 +47,7 @@ SECTION 4. BOILERPLATE AND SEVERABILITY
 
 def main():
     print("=" * 75)
-    print(" ⚖️  ADJOURNAI - SUMMARY-AUGMENTED CHUNKING (SAC) & LEMAJ PIPELINE DEMO")
+    print(" ⚖️  AdjournAID - SUMMARY-AUGMENTED CHUNKING (SAC) & LEMAJ PIPELINE DEMO")
     print("=" * 75)
 
     # 1. Parsing & Structural Decomposition

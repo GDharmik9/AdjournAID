@@ -1,5 +1,5 @@
 """
-AdjournAI Backend Configuration Compatibility Shim.
+AdjournAID Backend Configuration Compatibility Shim.
 Re-exports from backend.infra.config.env
 """
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# AdjournAI: Google Cloud Run Deployment Script (Concept B)
+# AdjournAID: Google Cloud Run Deployment Script (Concept B)
 # Deploys backend and frontend to Google Cloud Run to provide live https://*.a.run.app URLs.
 # ==============================================================================
 
@@ -15,7 +15,7 @@ if [ -z "$PROJECT_ID" ]; then
   exit 1
 fi
 
-echo "🚀 Deploying AdjournAI to Google Cloud Run..."
+echo "🚀 Deploying AdjournAID to Google Cloud Run..."
 echo "• Project: $PROJECT_ID"
 echo "• Region:  $REGION"
 
@@ -56,7 +56,7 @@ gcloud run deploy adjourn-frontend \
 FRONTEND_URL=$(gcloud run services describe adjourn-frontend --platform managed --region "$REGION" --project "$PROJECT_ID" --format 'value(status.url)')
 
 echo "\n=============================================================================="
-echo " 🎉 ADJOURNAI CLOUD RUN DEPLOYMENT COMPLETE!"
+echo " 🎉 AdjournAID CLOUD RUN DEPLOYMENT COMPLETE!"
 echo "=============================================================================="
 echo "• Live Web Application URL: $FRONTEND_URL"
 echo "• Backend API URL:          $BACKEND_URL"

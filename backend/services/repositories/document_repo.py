@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List
 from backend.core.entities.document import DocumentMetadata
 
-logger = logging.getLogger("AdjournAI.DocumentRepo")
+logger = logging.getLogger("AdjournAID.DocumentRepo")
 
 
 class IDocumentRepository(ABC):

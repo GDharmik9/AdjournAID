@@ -6,7 +6,7 @@ Ensures zero-UPL compliance, accurate risk tagging (Red/Amber/Blue), and structu
 
 from typing import Dict, Any, Optional
 
-CLAIM_SYSTEM_PROMPT = """You are AdjournAI, an educational legal co-pilot designed to help consumers, tenants, and small business owners understand complex contracts.
+CLAIM_SYSTEM_PROMPT = """You are AdjournAID, an educational legal co-pilot designed to help consumers, tenants, and small business owners understand complex contracts.
 You must strictly follow the CLAIM framework (Context, Legal Task, Audience, Instructions, Mode of Output).
 
 CRITICAL NON-UPL DIRECTIVE:

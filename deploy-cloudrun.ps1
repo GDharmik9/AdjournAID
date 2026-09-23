@@ -1,5 +1,5 @@
 # ==============================================================================
-# AdjournAI: Google Cloud Run Deployment Script (PowerShell for Windows)
+# AdjournAID: Google Cloud Run Deployment Script (PowerShell for Windows)
 # ==============================================================================
 
 param (
@@ -16,7 +16,7 @@ if (-not $ProjectId) {
     exit 1
 }
 
-Write-Host "🚀 Deploying AdjournAI to Google Cloud Run..." -ForegroundColor Cyan
+Write-Host "🚀 Deploying AdjournAID to Google Cloud Run..." -ForegroundColor Cyan
 Write-Host "• Project: $ProjectId"
 Write-Host "• Region:  $Region"
 
@@ -58,7 +58,7 @@ $FrontendUrl = (gcloud run services describe adjourn-frontend --platform managed
 Set-Location -Path $PSScriptRoot
 
 Write-Host "`n==============================================================================" -ForegroundColor Green
-Write-Host " 🎉 ADJOURNAI CLOUD RUN DEPLOYMENT COMPLETE!" -ForegroundColor Green
+Write-Host " 🎉 AdjournAID CLOUD RUN DEPLOYMENT COMPLETE!" -ForegroundColor Green
 Write-Host "==============================================================================" -ForegroundColor Green
 Write-Host "• Live Web Application URL: $FrontendUrl" -ForegroundColor Cyan
 Write-Host "• Backend API URL:          $BackendUrl" -ForegroundColor Cyan

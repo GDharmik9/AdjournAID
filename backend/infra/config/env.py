@@ -1,5 +1,5 @@
 """
-AdjournAI Infrastructure Configuration (The Plugs)
+AdjournAID Infrastructure Configuration (The Plugs)
 Manages environment variables, constants, and Zero-Data-Retention (ZDR) directories.
 """
 
@@ -21,7 +21,7 @@ PROJECT_ROOT = BASE_DIR.parent
 
 class Settings(BaseModel):
     # App Information
-    APP_NAME: str = "AdjournAI"
+    APP_NAME: str = "AdjournAID"
     VERSION: str = "1.0.0"
     DEBUG: bool = os.getenv("DEBUG", "False").lower() in ("true", "1")
 

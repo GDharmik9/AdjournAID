@@ -3,7 +3,7 @@ import logging
 from typing import List, Dict, Any
 from backend.services.utils.text_sanitizer import sanitize_document_text
 
-logger = logging.getLogger("AdjournAI.PDFParser")
+logger = logging.getLogger("AdjournAID.PDFParser")
 
 
 class PDFParser:

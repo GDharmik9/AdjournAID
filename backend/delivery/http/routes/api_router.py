@@ -1,5 +1,5 @@
 """
-Delivery HTTP Route definitions for AdjournAI API.
+Delivery HTTP Route definitions for AdjournAID API.
 Maps external HTTP routes to controller methods.
 """
 

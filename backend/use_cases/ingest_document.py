@@ -20,7 +20,7 @@ from backend.services.repositories.document_repo import document_repository, IDo
 from backend.services.repositories.vector_repo import vector_repository_manager, VectorRepositoryManager
 from backend.use_cases.sample_contracts import SampleContractsUseCase
 
-logger = logging.getLogger("AdjournAI.IngestDocument")
+logger = logging.getLogger("AdjournAID.IngestDocument")
 
 
 class IngestDocumentUseCase:

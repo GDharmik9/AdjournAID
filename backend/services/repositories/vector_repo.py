@@ -6,7 +6,7 @@ from typing import Dict, Any, List, Optional
 from backend.core.entities.document import ParsedSection, SACChunk
 from backend.infra.vector_store.faiss_store import FAISSVectorIndex
 
-logger = logging.getLogger("AdjournAI.VectorRepo")
+logger = logging.getLogger("AdjournAID.VectorRepo")
 
 
 class IVectorRepository(ABC):

@@ -1,5 +1,5 @@
 """
-AdjournAI Use Cases (🧫 Organisms: Core Feature Orchestration)
+AdjournAID Use Cases (🧫 Organisms: Core Feature Orchestration)
 """
 
 from backend.use_cases.ingest_document import IngestDocumentUseCase

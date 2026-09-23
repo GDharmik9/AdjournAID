@@ -31,7 +31,7 @@ export default function Navbar({
           <div>
             <div className="flex items-center gap-2">
               <span className="font-display font-bold text-lg tracking-tight text-white">
-                Adjourn<span className="text-indigo-400">AI</span>
+                Adjourn<span className="text-indigo-400">AID</span>
               </span>
               <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
                 Educational Co-Pilot

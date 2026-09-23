@@ -4,7 +4,7 @@ import Kbd from '../atoms/Kbd';
 
 /**
  * Organism: ShortcutsModal
- * Accessible dialog explaining keyboard shortcuts available in AdjournAI.
+ * Accessible dialog explaining keyboard shortcuts available in AdjournAID.
  */
 export default function ShortcutsModal({ isOpen, onClose, isPaper = false }) {
   if (!isOpen) return null;
@@ -40,7 +40,7 @@ export default function ShortcutsModal({ isOpen, onClose, isPaper = false }) {
         <div className="flex items-center justify-between border-b pb-3 mb-4">
           <h3 id="shortcuts-dialog-title" className="text-sm font-bold flex items-center gap-2">
             <HelpCircle className="h-4 w-4 text-indigo-500" />
-            <span>AdjournAI Keyboard Shortcuts</span>
+            <span>AdjournAID Keyboard Shortcuts</span>
           </h3>
           <button
             onClick={onClose}

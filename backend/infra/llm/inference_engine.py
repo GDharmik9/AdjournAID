@@ -17,7 +17,7 @@ from backend.prompts.claim_templates import (
     build_consultation_brief_prompt,
 )
 
-logger = logging.getLogger("AdjournAI.InferenceEngine")
+logger = logging.getLogger("AdjournAID.InferenceEngine")
 
 
 class InferenceEngine:
@@ -63,7 +63,7 @@ class InferenceEngine:
 
         # Robust zero-crash fallback
         fallback = cls._run_fallback(task_type, sections, doc_fingerprint)
-        fallback["_provider_used"] = "AdjournAI Deterministic Legal Intelligence Engine (Fallback)"
+        fallback["_provider_used"] = "AdjournAID Deterministic Legal Intelligence Engine (Fallback)"
         return fallback
 
     @classmethod

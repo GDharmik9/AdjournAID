@@ -12,7 +12,7 @@ from backend.services.repositories.vector_repo import vector_repository_manager,
 from backend.services.inference_service import InferenceService
 from backend.services.verifier_service import LeMAJVerifier
 
-logger = logging.getLogger("AdjournAI.AnalyzeContract")
+logger = logging.getLogger("AdjournAID.AnalyzeContract")
 
 DEFAULT_QUERY_MAP = {
     "risk_review": "indemnification liability default termination penalty automatic renewal arbitration damages",

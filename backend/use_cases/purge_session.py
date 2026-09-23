@@ -10,7 +10,7 @@ from backend.core.exceptions import SessionNotFoundError
 from backend.services.repositories.document_repo import document_repository, IDocumentRepository
 from backend.services.repositories.vector_repo import vector_repository_manager, VectorRepositoryManager
 
-logger = logging.getLogger("AdjournAI.PurgeSession")
+logger = logging.getLogger("AdjournAID.PurgeSession")
 
 
 class PurgeSessionUseCase:

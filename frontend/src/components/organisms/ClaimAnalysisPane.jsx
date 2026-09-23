@@ -35,7 +35,7 @@ export default function ClaimAnalysisPane({
     >
       {/* Right Pane Header */}
       <div
-        className={`p-3 border-b flex items-center justify-between ${
+        className={`p-3 p-3.5 border-b flex items-center justify-between ${
           isPaper ? 'bg-white border-slate-200' : 'bg-slate-900/80 border-slate-800'
         }`}
       >

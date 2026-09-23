@@ -1,15 +1,15 @@
 from typing import Optional, Any
 
 
-class AdjournAIException(Exception):
-    """Base domain exception for AdjournAI."""
+class AdjournAIDException(Exception):
+    """Base domain exception for AdjournAID."""
     def __init__(self, message: str, status_code: int = 400):
         super().__init__(message)
         self.message = message
         self.status_code = status_code
 
 
-class SessionNotFoundError(AdjournAIException):
+class SessionNotFoundError(AdjournAIDException):
     def __init__(self, message_or_id: str):
         if " " in message_or_id:
             msg = message_or_id
@@ -18,7 +18,7 @@ class SessionNotFoundError(AdjournAIException):
         super().__init__(msg, status_code=404)
 
 
-class DocumentParsingError(AdjournAIException):
+class DocumentParsingError(AdjournAIDException):
     def __init__(self, detail: str):
         if detail.startswith("Failed to parse document:"):
             msg = detail
@@ -27,7 +27,7 @@ class DocumentParsingError(AdjournAIException):
         super().__init__(msg, status_code=400)
 
 
-class FileTooLargeError(AdjournAIException):
+class FileTooLargeError(AdjournAIDException):
     def __init__(self, message_or_size: Any = "Uploaded file exceeds maximum security limit of 10 MB.", limit_mb: Optional[int] = None):
         if limit_mb is not None:
             msg = f"Uploaded content ({message_or_size} MB) exceeds maximum security limit of {limit_mb} MB."
@@ -36,7 +36,7 @@ class FileTooLargeError(AdjournAIException):
         super().__init__(msg, status_code=413)
 
 
-class SampleNotFoundError(AdjournAIException):
+class SampleNotFoundError(AdjournAIDException):
     def __init__(self, sample_id: str):
         if " " in sample_id:
             msg = sample_id

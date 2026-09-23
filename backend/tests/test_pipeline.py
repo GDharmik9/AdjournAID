@@ -243,7 +243,7 @@ def test_lemaj_boundary_conditions():
 
 
 if __name__ == "__main__":
-    print("Running AdjournAI Backend Test Suite...")
+    print("Running AdjournAID Backend Test Suite...")
     test_pii_phi_scrubbing()
     print("PASS: test_pii_phi_scrubbing")
     test_sac_chunking_pipeline()

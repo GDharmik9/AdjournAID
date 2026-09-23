@@ -1,5 +1,5 @@
 /**
- * Centralized Typography Scale Definition for AdjournAI
+ * Centralized Typography Scale Definition for AdjournAID
  * Provides accessible, high-legibility font scaling tokens
  * across both the contract text pane and the CLAIM analysis column.
  */

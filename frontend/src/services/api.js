@@ -1,5 +1,5 @@
 /**
- * Centralized API Service for AdjournAI Frontend.
+ * Centralized API Service for AdjournAID Frontend.
  * Standardizes endpoints, request timeouts, error normalization, and session lifecycle.
  */
 import axios from 'axios';
