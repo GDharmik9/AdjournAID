@@ -59,7 +59,15 @@ class InferenceEngine:
                     result["_provider_used"] = f"Local Air-Gapped SaulLM ({settings.SAULLM_MODEL_NAME})"
                     return result
             except Exception as e:
-                logger.warning(f"Local SaulLM inference failed: {e}. Falling back to deterministic engine.")
+                logger.warning(f"Local SaulLM inference failed: {e}. Attempting Vertex AI fallback.")
+                if settings.GOOGLE_CLOUD_PROJECT or settings.GEMINI_API_KEY:
+                    try:
+                        res = cls._run_gemini(task_type, doc_fingerprint, context_text)
+                        if res:
+                            res["_provider_used"] = f"Google Cloud Vertex AI ({settings.GEMINI_MODEL})"
+                            return res
+                    except Exception as gemini_err:
+                        logger.warning(f"Vertex AI fallback failed: {gemini_err}. Falling back to deterministic engine.")
 
         # Robust zero-crash fallback
         fallback = cls._run_fallback(task_type, sections, doc_fingerprint)
@@ -84,24 +92,36 @@ class InferenceEngine:
             for s in sections[:8]
         )
 
+    _cached_gemini_client = None
+
     @classmethod
-    def _run_gemini(cls, task_type: str, doc_fingerprint: str, context_text: str) -> Optional[Dict[str, Any]]:
+    def _get_gemini_client(cls):
+        if cls._cached_gemini_client is not None:
+            return cls._cached_gemini_client
+
         from google import genai
         from google.genai import types
 
         api_key = settings.GEMINI_API_KEY
-        client = None
-
         if settings.GOOGLE_CLOUD_PROJECT:
-            client = genai.Client(
+            cls._cached_gemini_client = genai.Client(
                 vertexai=True,
                 project=settings.GOOGLE_CLOUD_PROJECT,
                 location=settings.GOOGLE_CLOUD_LOCATION,
+                http_options=types.HttpOptions(timeout=45000),
             )
         elif api_key:
-            client = genai.Client(api_key=api_key)
+            cls._cached_gemini_client = genai.Client(api_key=api_key, http_options=types.HttpOptions(timeout=45000))
         else:
-            client = genai.Client()
+            cls._cached_gemini_client = genai.Client(http_options=types.HttpOptions(timeout=45000))
+
+        return cls._cached_gemini_client
+
+    @classmethod
+    def _run_gemini(cls, task_type: str, doc_fingerprint: str, context_text: str) -> Optional[Dict[str, Any]]:
+        from google.genai import types
+
+        client = cls._get_gemini_client()
 
         prompt_builder = {
             "risk_review": build_risk_review_prompt,
@@ -117,6 +137,7 @@ class InferenceEngine:
             temperature=0.1,
             response_mime_type="application/json",
             thinking_config=types.ThinkingConfig(thinking_budget=0),
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
         )
 
         response = client.models.generate_content(

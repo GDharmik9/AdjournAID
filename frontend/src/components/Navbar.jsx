@@ -12,13 +12,13 @@ export default function Navbar({
   isPurging,
 }) {
   const providerNames = {
-    gemini: { label: 'Gemini 2.0 Flash', badge: 'Vertex AI', color: 'text-sky-400 bg-sky-950/40 border-sky-800/60' },
-    vertex_ai: { label: 'Gemini 2.0 Flash', badge: 'Vertex AI', color: 'text-sky-400 bg-sky-950/40 border-sky-800/60' },
-    local_saul_lm: { label: 'SaulLM-7B', badge: 'vLLM Air-Gapped', color: 'text-purple-400 bg-purple-950/40 border-purple-800/60' },
-    fallback: { label: 'CLAIM Legal Engine', badge: 'ZDR Offline', color: 'text-indigo-400 bg-indigo-950/40 border-indigo-800/60' },
+    gemini: { label: 'Gemini 2.5 Flash', badge: 'Vertex AI', color: 'text-sky-400 bg-sky-950/40 border-sky-800/60' },
+    vertex_ai: { label: 'Gemini 2.5 Flash', badge: 'Vertex AI', color: 'text-sky-400 bg-sky-950/40 border-sky-800/60' },
+    local_saul_lm: { label: 'SaulLM-7B (Local)', badge: 'vLLM Local', color: 'text-purple-400 bg-purple-950/40 border-purple-800/60' },
+    fallback: { label: 'CLAIM Legal Engine', badge: 'Rule-Based', color: 'text-indigo-400 bg-indigo-950/40 border-indigo-800/60' },
   };
 
-  const currentProvider = providerNames[activeProvider] || providerNames.fallback;
+  const currentProvider = providerNames[activeProvider] || providerNames.gemini;
 
   return (
     <header className="border-b border-slate-800 bg-slate-900/95 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-6 py-2.5">
@@ -51,7 +51,7 @@ export default function Navbar({
             <button
               type="button"
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${currentProvider.color}`}
-              title="Click to toggle between Vertex AI Gemini and SaulLM-7B"
+              title="Click to select inference engine"
             >
               <Sparkles className="h-3.5 w-3.5" />
               <span>{currentProvider.label}</span>
@@ -68,20 +68,20 @@ export default function Navbar({
                 className="w-full text-left p-2 rounded-lg hover:bg-slate-800 transition-colors"
               >
                 <div className="text-xs font-bold text-sky-400 flex items-center justify-between">
-                  <span>Concept B: Gemini 2.0 Flash</span>
-                  <span className="text-[10px] bg-sky-500/20 px-1.5 py-0.5 rounded">Vertex AI</span>
+                  <span>Google Vertex AI (Recommended)</span>
+                  <span className="text-[10px] bg-sky-500/20 px-1.5 py-0.5 rounded">Live Cloud</span>
                 </div>
-                <div className="text-[10px] text-slate-400">Google Cloud Run & Vertex AI Hackathon Stack</div>
+                <div className="text-[10px] text-slate-400">Gemini 2.5 Flash on Google Cloud Platform</div>
               </button>
               <button
                 onClick={() => onProviderChange && onProviderChange('local_saul_lm')}
                 className="w-full text-left p-2 rounded-lg hover:bg-slate-800 transition-colors"
               >
                 <div className="text-xs font-bold text-purple-400 flex items-center justify-between">
-                  <span>Concept A: SaulLM-7B</span>
-                  <span className="text-[10px] bg-purple-500/20 px-1.5 py-0.5 rounded">Air-Gapped</span>
+                  <span>Local SaulLM-7B</span>
+                  <span className="text-[10px] bg-purple-500/20 px-1.5 py-0.5 rounded">Local vLLM</span>
                 </div>
-                <div className="text-[10px] text-slate-400">30B-token Legal Model in Local vLLM Container</div>
+                <div className="text-[10px] text-slate-400">Requires local GPU container on localhost:8000</div>
               </button>
               <button
                 onClick={() => onProviderChange && onProviderChange('fallback')}

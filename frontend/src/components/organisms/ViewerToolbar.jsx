@@ -12,6 +12,7 @@ import LeMAJBadge from '../LeMAJBadge';
  */
 export default function ViewerToolbar({
   activeTaskType,
+  analysisCache = {},
   onTaskChange,
   readingTheme,
   onThemeChange,
@@ -33,6 +34,7 @@ export default function ViewerToolbar({
       {/* 4 CLAIM Navigation Tabs */}
       <TaskTabNav
         activeTaskType={activeTaskType}
+        cachedTabs={analysisCache}
         onTaskChange={onTaskChange}
         isPaper={isPaper}
       />

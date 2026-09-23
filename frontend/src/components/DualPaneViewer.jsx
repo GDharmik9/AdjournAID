@@ -15,10 +15,12 @@ export default function DualPaneViewer({
   documentData,
   analysisData,
   activeTaskType = 'risk_review',
+  analysisCache = {},
   onTaskChange,
   isAnalyzing = false,
   onRefreshAnalysis,
 }) {
+
   // Reading comfort theme: 'paper' (Warm Paper ☀️) or 'dark' (Soft Dark 🌙)
   const [readingTheme, setReadingTheme] = useState('paper');
   // Typography font scaling: 'sm', 'md', 'lg'
@@ -69,8 +71,10 @@ export default function DualPaneViewer({
       toolbar={
         <ViewerToolbar
           activeTaskType={activeTaskType}
+          analysisCache={analysisCache}
           onTaskChange={onTaskChange}
           readingTheme={readingTheme}
+
           onThemeChange={setReadingTheme}
           fontSizeLevel={fontSizeLevel}
           onFontSizeChange={setFontSizeLevel}

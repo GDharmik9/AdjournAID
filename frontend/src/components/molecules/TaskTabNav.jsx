@@ -7,6 +7,7 @@ import { ShieldAlert, BookOpen, GitCompare, FileCheck2 } from 'lucide-react';
  */
 export default function TaskTabNav({
   activeTaskType,
+  cachedTabs = {},
   onTaskChange,
   isPaper = false,
   className = '',
@@ -51,6 +52,8 @@ export default function TaskTabNav({
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTaskType === tab.type;
+        const isPreloaded = Boolean(cachedTabs[tab.type]);
+
         return (
           <button
             key={tab.type}
@@ -59,8 +62,8 @@ export default function TaskTabNav({
             aria-selected={isActive}
             aria-controls="claim-analysis-panel"
             onClick={() => onTaskChange(tab.type)}
-            title={tab.title}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0 ${
+            title={isPreloaded ? `${tab.title} (Preloaded & Ready)` : tab.title}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-shrink-0 relative ${
               isActive
                 ? 'bg-indigo-600 text-white shadow-sm font-bold'
                 : isPaper
@@ -70,6 +73,12 @@ export default function TaskTabNav({
           >
             <Icon className="h-3.5 w-3.5 flex-shrink-0" />
             <span>{tab.label}</span>
+            {isPreloaded && !isActive && (
+              <span
+                className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"
+                title="Analysis cached & ready instantly"
+              />
+            )}
           </button>
         );
       })}
