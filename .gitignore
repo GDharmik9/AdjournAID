@@ -148,3 +148,14 @@ out/
 *.bak
 *.tmp
 *.temp
+
+# Video & Large Media Recordings (Keep repo strictly < 10 MB)
+*.mp4
+*.webm
+*.mov
+*.avi
+*.mkv
+*.wmv
+docs/*.mp4
+docs/*.webm
+
