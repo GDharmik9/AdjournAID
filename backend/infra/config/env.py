@@ -25,8 +25,8 @@ class Settings(BaseModel):
     VERSION: str = "1.0.0"
     DEBUG: bool = os.getenv("DEBUG", "False").lower() in ("true", "1")
 
-    # Server Settings
-    HOST: str = os.getenv("HOST", "0.0.0.0")
+    # Server Settings (Docker/Cloud Run container standard binding)
+    HOST: str = os.getenv("HOST", "0.0.0.0")  # nosec B104
     PORT: int = int(os.getenv("PORT", "8000"))
 
     # Summary-Augmented Chunking (SAC) Parameters

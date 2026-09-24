@@ -59,46 +59,50 @@ class AnalyzeContractUseCase:
             "hit_ratio_pct": hit_ratio,
         }
 
-    def execute(
+    @staticmethod
+    def _extract_items_to_verify(task_type: str, analysis_raw: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Maps CLAIM task outputs to standardized verification tuples."""
+        if task_type == "risk_review":
+            return analysis_raw.get("risk_items", [])
+        if task_type == "simplification":
+            return analysis_raw.get("simplified_clauses", [])
+        if task_type == "redline":
+            return analysis_raw.get("redlines", [])
+        if task_type == "comparison":
+            return [
+                {
+                    "clause_ref": c.get("clause_ref", c.get("term_category", "")),
+                    "summary": c.get("this_contract_term", ""),
+                    "implication": c.get("negotiation_tip", ""),
+                }
+                for c in analysis_raw.get("comparison_items", [])
+            ]
+        if task_type == "qa_query":
+            return [
+                {
+                    "clause_ref": analysis_raw.get("primary_clause_ref", "Source Excerpt"),
+                    "summary": analysis_raw.get("direct_answer", ""),
+                    "implication": analysis_raw.get("practical_advice", ""),
+                }
+            ]
+        return analysis_raw.get("top_red_flags", [])
+
+    def _run_analysis_pipeline(
         self,
+        doc_meta: Any,
         document_id: str,
-        task_type: str = "risk_review",
-        custom_query: Optional[str] = None,
-        force_refresh: bool = False,
+        task_type: str,
+        custom_query: Optional[str],
     ) -> Dict[str, Any]:
-        provider = InferenceService.get_active_provider()
-        cache_key = f"{document_id}:{task_type}:{provider}:{custom_query or ''}"
-
-        # Return cached result if available and not forced to refresh (LRU hit)
-        if not force_refresh and cache_key in self._analysis_cache:
-            self.cache_hits += 1
-            self._analysis_cache.move_to_end(cache_key)
-            logger.info(f"Serving cached analysis for session '{document_id}', task '{task_type}' (Cache Hit #{self.cache_hits})")
-            cached_result = dict(self._analysis_cache[cache_key])
-            cached_result["cached"] = True
-            cached_result["cache_hit"] = True
-            return cached_result
-
-        self.cache_misses += 1
-
-        doc_meta = self.doc_repo.get(document_id)
-        if not doc_meta:
-            raise SessionNotFoundError("Document session not found. Please upload or load contract first.")
-
+        """Executes retrieval, inference, and verification pipeline."""
         retriever = self.vector_mgr.get_or_create(document_id)
-
-        # Hierarchical Auto-Merge Search Query
         search_query = custom_query or DEFAULT_QUERY_MAP.get(task_type, "contract clauses obligations liability")
         retrieved_contexts = retriever.auto_merge_retrieve(query=search_query, top_k=6)
 
-
-        # Build context lookup dictionary for LeMAJ verification
-        source_context_by_clause = {}
+        source_context_by_clause = {c["section_id"]: c["content"] for c in retrieved_contexts}
         for c in retrieved_contexts:
-            source_context_by_clause[c["section_id"]] = c["content"]
             source_context_by_clause[c["title"]] = c["content"]
 
-        # CLAIM Inference Generation
         analysis_raw = InferenceService.generate_claim_analysis(
             task_type=task_type,
             sections=doc_meta.sections,
@@ -107,40 +111,13 @@ class AnalyzeContractUseCase:
             custom_query=custom_query,
         )
 
-        # Verification Layer: LeMAJ Framework
-        items_to_verify = []
-        if task_type == "risk_review":
-            items_to_verify = analysis_raw.get("risk_items", [])
-        elif task_type == "simplification":
-            items_to_verify = analysis_raw.get("simplified_clauses", [])
-        elif task_type == "redline":
-            items_to_verify = analysis_raw.get("redlines", [])
-        elif task_type == "comparison":
-            items_to_verify = [
-                {
-                    "clause_ref": c.get("clause_ref", c.get("term_category", "")),
-                    "summary": c.get("this_contract_term", ""),
-                    "implication": c.get("negotiation_tip", ""),
-                }
-                for c in analysis_raw.get("comparison_items", [])
-            ]
-        elif task_type == "qa_query":
-            items_to_verify = [
-                {
-                    "clause_ref": analysis_raw.get("primary_clause_ref", "Source Excerpt"),
-                    "summary": analysis_raw.get("direct_answer", ""),
-                    "implication": analysis_raw.get("practical_advice", ""),
-                }
-            ]
-        else:
-            items_to_verify = analysis_raw.get("top_red_flags", [])
-
+        items_to_verify = self._extract_items_to_verify(task_type, analysis_raw)
         lemaj_result = LeMAJVerifier.verify_analysis(
             analysis_items=items_to_verify,
             source_context_by_clause=source_context_by_clause,
         )
 
-        result = {
+        return {
             "document_id": document_id,
             "task_type": task_type,
             "doc_fingerprint": doc_meta.doc_fingerprint,
@@ -151,7 +128,32 @@ class AnalyzeContractUseCase:
             "cached": False,
         }
 
-        # Store in volatile in-memory session cache with LRU bounded capacity
+    def execute(
+        self,
+        document_id: str,
+        task_type: str = "risk_review",
+        custom_query: Optional[str] = None,
+        force_refresh: bool = False,
+    ) -> Dict[str, Any]:
+        provider = InferenceService.get_active_provider()
+        cache_key = f"{document_id}:{task_type}:{provider}:{custom_query or ''}"
+
+        if not force_refresh and cache_key in self._analysis_cache:
+            self.cache_hits += 1
+            self._analysis_cache.move_to_end(cache_key)
+            logger.info(f"Serving cached analysis for session '{document_id}', task '{task_type}' (Cache Hit #{self.cache_hits})")
+            cached_result = dict(self._analysis_cache[cache_key])
+            cached_result["cached"] = True
+            cached_result["cache_hit"] = True
+            return cached_result
+
+        self.cache_misses += 1
+        doc_meta = self.doc_repo.get(document_id)
+        if not doc_meta:
+            raise SessionNotFoundError("Document session not found. Please upload or load contract first.")
+
+        result = self._run_analysis_pipeline(doc_meta, document_id, task_type, custom_query)
+
         if len(self._analysis_cache) >= self.MAX_CACHE_ENTRIES:
             self._analysis_cache.popitem(last=False)
         self._analysis_cache[cache_key] = result
