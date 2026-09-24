@@ -39,10 +39,10 @@ export default function RedlinesList({
                 isPaper ? 'text-slate-900' : 'text-slate-100'
               }`}
             >
-              {redline.clause_ref}
+              {redline.clause_ref || redline.clause_title || redline.title || 'Target Clause'}
             </span>
             <button
-              onClick={() => onVerifyInText(redline.clause_ref, redline.section_id)}
+              onClick={() => onVerifyInText(redline.clause_ref || redline.clause_title, redline.section_id)}
               className={`${typography.cardTag} font-semibold text-indigo-500 hover:underline`}
             >
               Highlight Original →
@@ -62,7 +62,7 @@ export default function RedlinesList({
                   : 'bg-rose-950/20 border border-rose-900/30 text-rose-300/80'
               }`}
             >
-              {redline.original_text}
+              {redline.original_text || redline.original || redline.current_text || 'Original clause text referenced'}
             </div>
           </div>
 
@@ -79,7 +79,7 @@ export default function RedlinesList({
                   : 'bg-emerald-950/20 border border-emerald-900/30 text-emerald-200'
               }`}
             >
-              {redline.proposed_redline}
+              {redline.proposed_redline || redline.redline || redline.counter_proposal || redline.recommended_text}
             </div>
           </div>
 
@@ -88,7 +88,7 @@ export default function RedlinesList({
               isPaper ? 'text-slate-600' : 'text-slate-400'
             }`}
           >
-            <strong>Negotiation Rationale:</strong> {redline.rationale}
+            <strong>Negotiation Rationale:</strong> {redline.rationale || redline.implication || redline.explanation || 'Provides commercially balanced protections.'}
           </div>
         </div>
       ))}

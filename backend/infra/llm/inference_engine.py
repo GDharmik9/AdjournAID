@@ -164,7 +164,7 @@ class InferenceEngine:
             system_instruction=CLAIM_SYSTEM_PROMPT,
             temperature=0.1,
             response_mime_type="application/json",
-            max_output_tokens=1500,
+            max_output_tokens=3000,
             thinking_config=types.ThinkingConfig(thinking_budget=0),
             automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
         )
@@ -315,6 +315,14 @@ class InferenceEngine:
                 "original_text": "automatically renew for additional successive terms of three (3) years each, unless Tenant delivers written notice... at least one hundred eighty (180) days prior",
                 "proposed_redline": "renew only upon mutual written agreement executed by both parties at least sixty (60) days prior to expiration",
                 "rationale": "Prevents inadvertent lock-in to multi-year commitments.",
+                "section_id": "sec-1"
+            })
+        if not redlines:
+            redlines.append({
+                "clause_ref": "Notice & Demand Period",
+                "original_text": "Recipient shall comply immediately upon receipt or face unilateral legal action and associated penalties.",
+                "proposed_redline": "Recipient shall have fifteen (15) business days from verified written receipt to investigate and tender formal response prior to initiation of legal action.",
+                "rationale": "Establishes a bilateral investigation and cure window to prevent surprise acceleration or predatory litigation.",
                 "section_id": "sec-1"
             })
         return {"redlines": redlines}

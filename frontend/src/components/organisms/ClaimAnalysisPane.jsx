@@ -117,7 +117,7 @@ export default function ClaimAnalysisPane({
             {/* Mode 3: Side-by-Side Redlines */}
             {activeTaskType === 'redline' && (
               <RedlinesList
-                redlines={analysis.redlines}
+                redlines={analysis.redlines || analysis.proposed_redlines || analysis.redline_items || []}
                 onVerifyInText={onVerifyInText}
                 readingTheme={readingTheme}
                 fontSizeLevel={fontSizeLevel}
