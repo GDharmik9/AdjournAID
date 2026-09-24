@@ -75,21 +75,16 @@ Adversaries frequently insert instructions into legal contracts (e.g. `Ignore pr
 
 - `AnalyzeContractUseCase` features an in-memory `OrderedDict` LRU cache bounded to `MAX_CACHE_ENTRIES = 256`.
 - Identical analysis requests (e.g. toggling tabs, re-inspecting clauses) return in `< 2ms` with zero redundant LLM API calls.
-- Cache efficiency metrics (`hits`, `misses`, `hit_ratio_pct`) are exposed through `/api/health`.
 
-### E. GZip Stream & Payload Compression
-
-- FastAPI ASGI layer mounts `GZipMiddleware(minimum_size=1000)`.
-- Compresses large contract text payloads, analysis trees, and static assets by 70–85%, dramatically reducing network transfer latency and client data usage.
-
-### F. Sub-Millisecond Cold Starts & RAM Efficiency
+### E. Sub-Millisecond Cold Starts & RAM Efficiency
 
 - Heavy deep learning libraries (`sentence-transformers`, `torch`) are not required on the hot path.
-- The `FallbackDenseEmbedder` (128-dimensional feature-hashing + TF-IDF) starts in `< 15ms` with zero model weight cold-start penalty, maintaining memory footprint well under 150MB (runs smoothly on a standard 1 vCPU / 1GB RAM container).
+- The `FallbackDenseEmbedder` (128-dimensional feature-hashing + TF-IDF) starts in `< 15ms` with zero model weight cold-start penalty, maintaining memory footprint well under 150MB (runs smoothly on lightweight standard containers).
 
-### G. Ephemeral TTL Session Garbage Collection
+### F. Ephemeral TTL Session Garbage Collection
 
 - Vector embeddings and session caches are automatically swept after 30 minutes of inactivity via `PurgeSessionUseCase.cleanup_expired()`, preventing memory leaks in high-concurrency environments.
+
 
 ---
 

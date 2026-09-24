@@ -32,7 +32,6 @@ class HealthResponse(BaseModel):
     active_provider: str
     gemini_model: str
     supported_providers: List[str]
-    efficiency_metrics: Optional[Dict[str, Any]] = None
 
 
 class ProviderInfoResponse(BaseModel):

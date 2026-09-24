@@ -10,7 +10,6 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
 from starlette.requests import Request
 from starlette.responses import Response, FileResponse
 
@@ -36,9 +35,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# GZip compression middleware for payload transfer efficiency
-app.add_middleware(GZipMiddleware, minimum_size=1000)
-
 
 @app.middleware("http")
 async def add_security_and_audit_headers(request: Request, call_next):
@@ -56,11 +52,6 @@ async def add_security_and_audit_headers(request: Request, call_next):
     )
     response.headers["X-Zero-Data-Retention"] = "enforced"
     response.headers["X-Content-Type-Options"] = "nosniff"
-
-    # Fast client-side caching for content-hashed static assets
-    if request.url.path.startswith("/assets/"):
-        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
-
     return response
 
 

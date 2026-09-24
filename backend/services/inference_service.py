@@ -30,3 +30,14 @@ class InferenceService:
             retrieved_contexts=retrieved_contexts,
             custom_query=custom_query,
         )
+
+    @classmethod
+    def format_contexts(
+        cls,
+        retrieved_contexts: Optional[List[Dict[str, Any]]],
+        sections: List[Dict[str, Any]],
+        max_chars: int = 4000,
+    ) -> str:
+        """Enforces strict context window token budgeting (max 4,000 characters)."""
+        return InferenceEngine._format_contexts(retrieved_contexts, sections, max_chars=max_chars)
+
