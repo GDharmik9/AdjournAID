@@ -29,20 +29,34 @@ def evaluate():
     # ---------------------------------------------------------
     hard_rules = {}
 
-    # Branch Count
+    # Branch Count (local and remote)
     branch_out = subprocess.check_output(["git", "branch", "-a"], cwd=str(root), text=True)
-    local_branches = [b.strip() for b in branch_out.splitlines() if not b.strip().startswith("remotes/")]
-    is_single_branch = len(local_branches) == 1 and ("main" in local_branches[0] or "* main" in local_branches[0])
-    hard_rules["Single Branch (main)"] = "PASS" if is_single_branch else f"FAIL ({local_branches})"
+    branches = [b.strip() for b in branch_out.splitlines() if b.strip()]
+    local_branches = [b for b in branches if not b.startswith("remotes/")]
+    remote_branches = [b for b in branches if b.startswith("remotes/origin/") and "HEAD ->" not in b]
+    is_single_branch = (len(local_branches) <= 1) and (len(remote_branches) <= 1)
+    hard_rules["Single Branch (main)"] = "PASS" if is_single_branch else f"FAIL (local: {local_branches}, remote: {remote_branches})"
 
-    # Repository Size
+    # Repository Size (accounting for loose objects AND packed objects)
     count_out = subprocess.check_output(["git", "count-objects", "-vH"], cwd=str(root), text=True)
-    size_line = [l for l in count_out.splitlines() if l.startswith("size:")][0]
-    size_match = re.search(r"([\d.]+)\s*(KiB|MiB|B)?", size_line)
-    size_val = float(size_match.group(1)) if size_match else 0.0
-    size_unit = size_match.group(2) if size_match else "KiB"
-    is_under_10mb = (size_unit == "KiB" and size_val < 10240) or (size_unit == "MiB" and size_val < 10.0)
-    hard_rules["Repo Size (< 10 MB)"] = f"PASS ({size_val} {size_unit})" if is_under_10mb else f"FAIL ({size_val} {size_unit})"
+    loose_kb = 0.0
+    pack_kb = 0.0
+    for l in count_out.splitlines():
+        if l.startswith("size:"):
+            parts = l.split()
+            if len(parts) >= 2:
+                val = float(parts[1])
+                loose_kb = val if "KiB" in l or "k" in l.lower() else (val * 1024 if "MiB" in l else val / 1024)
+        elif l.startswith("size-pack:"):
+            parts = l.split()
+            if len(parts) >= 2:
+                val = float(parts[1])
+                pack_kb = val if "KiB" in l or "k" in l.lower() else (val * 1024 if "MiB" in l else val / 1024)
+
+    total_kb = loose_kb + pack_kb
+    total_mb = total_kb / 1024.0
+    is_under_10mb = total_mb < 10.0
+    hard_rules["Repo Size (< 10 MB)"] = f"PASS ({total_kb:.2f} KiB / {total_mb:.2f} MB)" if is_under_10mb else f"FAIL ({total_mb:.2f} MB)"
 
     # README Required Sections
     readme_path = root / "README.md"
@@ -181,7 +195,7 @@ def evaluate():
     # 4. Testing (Target: 100)
     # ---------------------------------------------------------
     test_proc = subprocess.run([sys.executable, "backend/tests/test_pipeline.py"], cwd=str(root), capture_output=True, text=True)
-    all_tests_passed = "ALL 10 TEST SUITES PASSED SUCCESSFULLY!" in test_proc.stdout
+    all_tests_passed = (test_proc.returncode == 0) and ("ALL 10 TEST SUITES PASSED SUCCESSFULLY!" in test_proc.stdout)
     scores["Testing"] = 100 if all_tests_passed else 60
     details["Testing"] = [
         "10 / 10 automated test suites passed" if all_tests_passed else "Test failures detected",
@@ -249,6 +263,11 @@ def evaluate():
     print("\n" + "=" * 70)
     print(f" 🏆 OVERALL CALCULATED AI EVALUATION SCORE: {overall_score:.2f} / 100")
     print("=" * 70)
+
+    # Enforce non-zero exit if any hard platform rule is breached
+    if not (is_single_branch and is_under_10mb and readme_valid):
+        print("\n❌ CRITICAL: Mandatory platform rules failed!")
+        sys.exit(1)
 
     return overall_score, scores
 

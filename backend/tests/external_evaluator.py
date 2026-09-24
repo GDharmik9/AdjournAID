@@ -27,24 +27,33 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 def audit_hard_rules() -> Dict[str, Any]:
-    # 1. Single branch rule
+    # 1. Single branch rule (local and remote)
     res = subprocess.run(["git", "branch", "-a"], cwd=ROOT, capture_output=True, text=True)
-    branches = [b.strip() for b in res.stdout.splitlines() if b.strip() and "HEAD ->" not in b]
+    branches = [b.strip() for b in res.stdout.splitlines() if b.strip()]
     local_branches = [b for b in branches if not b.startswith("remotes/")]
-    single_branch = len(local_branches) <= 1
+    remote_branches = [b for b in branches if b.startswith("remotes/origin/") and "HEAD ->" not in b]
+    single_branch = (len(local_branches) <= 1) and (len(remote_branches) <= 1)
 
-    # 2. Repo size rule (< 10 MB)
+    # 2. Repo size rule (< 10 MB, accounting for loose objects AND packed objects)
     count_res = subprocess.run(["git", "count-objects", "-vH"], cwd=ROOT, capture_output=True, text=True)
-    size_str = "Unknown"
-    size_mb = 0.0
+    loose_kb = 0.0
+    pack_kb = 0.0
     for line in count_res.stdout.splitlines():
         if line.startswith("size:"):
             parts = line.split()
             if len(parts) >= 2:
-                size_str = f"{parts[1]} {parts[2] if len(parts) > 2 else ''}"
                 val = float(parts[1])
-                unit = parts[2] if len(parts) > 2 else "KiB"
-                size_mb = val / 1024.0 if "KiB" in unit else val
+                loose_kb = val if "KiB" in line or "k" in line.lower() else (val * 1024 if "MiB" in line else val / 1024)
+        elif line.startswith("size-pack:"):
+            parts = line.split()
+            if len(parts) >= 2:
+                val = float(parts[1])
+                pack_kb = val if "KiB" in line or "k" in line.lower() else (val * 1024 if "MiB" in line else val / 1024)
+
+    total_kb = loose_kb + pack_kb
+    total_mb = total_kb / 1024.0
+    size_str = f"{total_kb:.2f} KiB ({total_mb:.2f} MB)"
+    under_10mb = total_mb < 10.0
 
     # 3. Mandatory README sections
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -55,10 +64,11 @@ def audit_hard_rules() -> Dict[str, Any]:
 
     return {
         "single_branch": single_branch,
-        "branch_count": len(local_branches),
-        "repo_size_mb": size_mb,
+        "local_branches": local_branches,
+        "remote_branches": remote_branches,
+        "repo_size_mb": total_mb,
         "repo_size_str": size_str,
-        "under_10mb": size_mb < 10.0,
+        "under_10mb": under_10mb,
         "readme_complete": (has_vertical and has_logic and has_how and has_assumptions),
     }
 
@@ -113,6 +123,16 @@ def audit_code_quality() -> Dict[str, Any]:
 def audit_security() -> Dict[str, Any]:
     cmd = [sys.executable, "-m", "bandit", "-r", "backend/", "-x", "backend/tests", "-f", "json"]
     res = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
+    if res.returncode not in (0, 1):
+        return {
+            "score": 0,
+            "total_issues": -1,
+            "high_severity": 0,
+            "medium_severity": 0,
+            "low_severity": 0,
+            "error": f"Bandit execution failed (exit code {res.returncode}): {res.stderr.strip()[:150]}",
+        }
+
     try:
         report = json.loads(res.stdout)
         metrics = report.get("metrics", {}).get("_totals", {})
@@ -120,8 +140,15 @@ def audit_security() -> Dict[str, Any]:
         med_sev = metrics.get("SEVERITY.MEDIUM", 0)
         low_sev = metrics.get("SEVERITY.LOW", 0)
         total_issues = len(report.get("results", []))
-    except Exception:
-        high_sev, med_sev, low_sev, total_issues = 0, 0, 0, 0
+    except Exception as e:
+        return {
+            "score": 0,
+            "total_issues": -1,
+            "high_severity": 0,
+            "medium_severity": 0,
+            "low_severity": 0,
+            "error": f"Failed to parse Bandit JSON output: {e}",
+        }
 
     score = 100 - (high_sev * 20) - (med_sev * 10) - (low_sev * 2)
     return {
@@ -130,6 +157,7 @@ def audit_security() -> Dict[str, Any]:
         "high_severity": high_sev,
         "medium_severity": med_sev,
         "low_severity": low_sev,
+        "error": None,
     }
 
 def audit_testing() -> Dict[str, Any]:
@@ -222,8 +250,9 @@ def main():
     print("=" * 72)
 
     hard = audit_hard_rules()
+    branch_detail = f"Local: {hard['local_branches']}, Remote: {hard['remote_branches']}"
     print("\n[Mandatory Platform Rules]")
-    print(f"  • Single Git Branch             : {'PASS' if hard['single_branch'] else 'FAIL'} ({hard['branch_count']} branch active)")
+    print(f"  • Single Git Branch             : {'PASS' if hard['single_branch'] else 'FAIL'} ({branch_detail})")
     print(f"  • Repo Size Under 10 MB         : {'PASS' if hard['under_10mb'] else 'FAIL'} ({hard['repo_size_str']})")
     print(f"  • Mandatory README Information  : {'PASS' if hard['readme_complete'] else 'FAIL'}")
 
@@ -255,10 +284,18 @@ def main():
     print("\n[External Library Verification Evidence]")
     print(f"  • Radon Maintainability Index  : {cq['avg_maintainability_index']}/100 (Grade: {cq['maintainability_grade']})")
     print(f"  • Radon Cyclomatic Complexity  : {cq['avg_cyclomatic_complexity']} avg (Grade: {cq['complexity_grade']})")
-    print(f"  • Bandit Security Scan Result  : {sec['total_issues']} vulnerabilities found (0 High, 0 Med, 0 Low)")
+    if sec.get("error"):
+        print(f"  • Bandit Security Scan Result  : ERROR ({sec['error']})")
+    else:
+        print(f"  • Bandit Security Scan Result  : {sec['total_issues']} issues ({sec['high_severity']} High, {sec['medium_severity']} Med, {sec['low_severity']} Low)")
     print(f"  • Pytest Pipeline Suite        : {test['summary']}")
     print(f"  • Token & Memory Budget        : SAC FP {eff['fingerprint_length']} chars, Context budget {eff['context_char_budget_chars']} chars")
     print(f"  • WCAG 2.1 AA Accessibility    : ARIA Live = {a11y['aria_live_announcer']}, Focus = {a11y['focus_visible_styling']}, Themes = {a11y['dual_comfort_modes']}")
+
+    # Enforce failing exit code if any mandatory hard platform rule is breached
+    if not (hard["single_branch"] and hard["under_10mb"] and hard["readme_complete"]):
+        print("\n❌ CRITICAL AUDIT FAILURE: Mandatory platform rules were breached!")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
