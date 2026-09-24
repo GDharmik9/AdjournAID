@@ -5,7 +5,7 @@ CLAIM Prompt Inference Engine, and LeMAJ Fact-Checking Verification.
 
 import logging
 from collections import OrderedDict
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from backend.core.exceptions import SessionNotFoundError
 from backend.services.repositories.document_repo import document_repository, IDocumentRepository
